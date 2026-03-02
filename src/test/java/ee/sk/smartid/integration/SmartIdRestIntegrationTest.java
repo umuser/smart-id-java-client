@@ -35,7 +35,6 @@ import java.util.regex.Pattern;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -85,7 +84,6 @@ class SmartIdRestIntegrationTest {
         smartIdConnector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v3/");
     }
 
-    @Disabled("Testing device-link flows with demo accounts is not yet possible")
     @Nested
     class DeviceLink {
 
@@ -108,7 +106,7 @@ class SmartIdRestIntegrationTest {
             void initDeviceLinkAuthentication_withDocumentNumber() {
                 DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40404040009-MOCK-Q");
 
                 assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
                 assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
@@ -217,7 +215,7 @@ class SmartIdRestIntegrationTest {
                         null
                 );
 
-                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40404040009-MOCK-Q");
 
                 assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
                 assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
@@ -231,7 +229,7 @@ class SmartIdRestIntegrationTest {
     class NotificationBasedRequests {
 
         private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-40504040001");
-        private static final String DOCUMENT_NUMBER = "PNOEE-40504040001-DEMO-Q";
+        private static final String DOCUMENT_NUMBER = "PNOEE-50001029996-DEMO-Q";
 
         @Nested
         class Authentication {
@@ -258,7 +256,7 @@ class SmartIdRestIntegrationTest {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
                         RpChallengeGenerator.generate().toBase64EncodedValue(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA_512.getAlgorithmName()));
 
                 return new NotificationAuthenticationSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
