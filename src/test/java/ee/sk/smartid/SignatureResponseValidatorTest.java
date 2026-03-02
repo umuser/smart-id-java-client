@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -109,18 +110,19 @@ class SignatureResponseValidatorTest {
         assertEquals("OK", response.getEndResult());
     }
 
-    @Test
-    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters() {
-        SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION.getAlgorithmName());
+    @ParameterizedTest
+    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters(SignatureAlgorithm signatureAlgorithm) {
+        SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", signatureAlgorithm.getAlgorithmName());
         sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
         sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
 
         SignatureResponse response = signatureResponseValidator.validate(sessionStatus, CertificateLevel.QUALIFIED);
 
         assertEquals("OK", response.getEndResult());
-        assertEquals(SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION.getAlgorithmName(), response.getAlgorithmName());
-        assertEquals(SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION, response.getSignatureAlgorithm());
-        assertTrue(response.getRsaSsaPssParameters() == null);
+        assertEquals(signatureAlgorithm.getAlgorithmName(), response.getAlgorithmName());
+        assertEquals(signatureAlgorithm, response.getSignatureAlgorithm());
+        assertNull(response.getRsaSsaPssParameters());
     }
 
     @Test
