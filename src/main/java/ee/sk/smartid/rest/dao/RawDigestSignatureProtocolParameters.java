@@ -28,14 +28,16 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Parameters for protocol RAW_DIGEST_SIGNATURE
  *
  * @param digest                       Required. The digest to be signed, Base64 encoded.
- * @param signatureAlgorithm           Required. The signature algorithm. Supported value is RSASSA-PSS.
- * @param signatureAlgorithmParameters Required. The parameters for signature algorithm.
+ * @param signatureAlgorithm           Required. The signature algorithm (e.g. rsassa-pss, sha512WithRSAEncryption).
+ * @param signatureAlgorithmParameters Required for RSASSA-PSS. Omitted for RSASSA-PKCS#1 v1.5 algorithms; must be null in that case so it is not serialized.
  */
 public record RawDigestSignatureProtocolParameters(String digest,
                                                    String signatureAlgorithm,
-                                                   SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
+                                                   @JsonInclude(JsonInclude.Include.NON_NULL) SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
 }

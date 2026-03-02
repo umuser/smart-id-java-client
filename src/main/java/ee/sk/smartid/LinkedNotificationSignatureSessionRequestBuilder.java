@@ -257,9 +257,12 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
     }
 
     private LinkedSignatureSessionRequest createSessionRequest() {
+        SignatureAlgorithmParameters algorithmParams = signatureAlgorithm.isLegacyRsa()
+                ? null
+                : new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName());
         var rawDigestParams = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+                algorithmParams);
         return new LinkedSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

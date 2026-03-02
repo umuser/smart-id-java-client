@@ -28,6 +28,7 @@ package ee.sk.smartid;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -173,6 +174,21 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void initSignatureSession_withLegacyRsaAlgorithm_omitsSignatureAlgorithmParameters(SignatureAlgorithm signatureAlgorithm) {
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+
+        deviceLinkSessionRequestBuilder.initSignatureSession();
+
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
+        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        assertEquals(signatureAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
     }
 
     @ParameterizedTest

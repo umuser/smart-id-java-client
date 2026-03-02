@@ -287,9 +287,12 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private DeviceLinkSignatureSessionRequest createSignatureSessionRequest() {
+        SignatureAlgorithmParameters algorithmParams = signatureAlgorithm.isLegacyRsa()
+                ? null
+                : new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName());
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+                algorithmParams);
         return new DeviceLinkSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

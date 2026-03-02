@@ -41,8 +41,8 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**
- * Implementation of {@link SignatureValueValidator} that uses RSASSA-PSS signature algorithm
- * to validate the signature value in the authentication and signature session status response.
+ * Implementation of {@link SignatureValueValidator} that validates signature values
+ * for both RSASSA-PSS (authentication and signing) and RSASSA-PKCS#1 v1.5 (signing only).
  */
 public final class SignatureValueValidatorImpl implements SignatureValueValidator {
 
@@ -59,6 +59,39 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
             result.initVerify(certificate.getPublicKey());
             result.update(payload);
             if (!result.verify(signatureValue)) {
+                throw new UnprocessableSmartIdResponseException("Provided signature value does not match the calculated signature value");
+            }
+        } catch (GeneralSecurityException ex) {
+            throw new UnprocessableSmartIdResponseException("Signature value validation failed", ex);
+        }
+    }
+
+    @Override
+    public void validate(byte[] signatureValue,
+                         byte[] payload,
+                         X509Certificate certificate,
+                         String signatureAlgorithmName) {
+        if (signatureValue == null) {
+            throw new SmartIdClientException("Parameter 'signatureValue' is not provided");
+        }
+        if (payload == null) {
+            throw new SmartIdClientException("Parameter 'payload' is not provided");
+        }
+        if (certificate == null) {
+            throw new SmartIdClientException("Parameter 'certificate' is not provided");
+        }
+        if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
+            throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
+        }
+        if (!SignatureAlgorithm.isLegacyRsa(signatureAlgorithmName)) {
+            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithmName + "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
+        }
+        try {
+            SignatureAlgorithm algorithm = SignatureAlgorithm.fromString(signatureAlgorithmName);
+            Signature signature = Signature.getInstance(algorithm.getJceAlgorithmName());
+            signature.initVerify(certificate.getPublicKey());
+            signature.update(payload);
+            if (!signature.verify(signatureValue)) {
                 throw new UnprocessableSmartIdResponseException("Provided signature value does not match the calculated signature value");
             }
         } catch (GeneralSecurityException ex) {

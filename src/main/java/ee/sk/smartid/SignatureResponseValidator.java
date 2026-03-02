@@ -110,15 +110,18 @@ public class SignatureResponseValidator {
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        signatureResponse.setSignatureAlgorithm(SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()));
 
-        SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
-        var rsaSsaPssParams = new RsaSsaPssParameters();
-        rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
-        rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
-        rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        rsaSsaPssParams.setTrailerField(TrailerField.BC);
-        signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
+        if (!SignatureAlgorithm.isLegacyRsa(sessionSignature.getSignatureAlgorithm())) {
+            SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+            var rsaSsaPssParams = new RsaSsaPssParameters();
+            rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+            rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+            rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+            rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+            rsaSsaPssParams.setTrailerField(TrailerField.BC);
+            signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
+        }
 
         signatureResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
@@ -234,7 +237,9 @@ public class SignatureResponseValidator {
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
-        validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
+        if (!SignatureAlgorithm.isLegacyRsa(signature.getSignatureAlgorithm())) {
+            validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
+        }
     }
 
     private static void validateSignatureValue(String value) {

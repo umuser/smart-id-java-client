@@ -275,6 +275,9 @@ public class NotificationAuthenticationSessionRequestBuilder {
         if (signatureAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
         }
+        if (!signatureAlgorithm.isUsedForAuthentication()) {
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be an algorithm supported for authentication (e.g. RSASSA_PSS). Legacy RSA algorithms are only supported for signing");
+        }
         if (hashAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'hashAlgorithm' must be set");
         }

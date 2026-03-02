@@ -36,16 +36,31 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 public interface SignatureValueValidator {
 
     /**
-     * Validates the signature value against the calculated signature value.
+     * Validates the signature value (RSASSA-PSS) against the calculated signature value.
      *
      * @param signatureValue      the signature value to validate
      * @param payload             the original data that was signed
      * @param certificate         X509 certificate used for signature validation
-     * @param rsaSsaPssParameters signature parameters used for creating signature value
+     * @param rsaSsaPssParameters  signature parameters used for creating signature value
      * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
      */
     void validate(byte[] signatureValue,
                   byte[] payload,
                   X509Certificate certificate,
                   RsaSsaPssParameters rsaSsaPssParameters);
+
+    /**
+     * Validates the signature value (RSASSA-PKCS#1 v1.5) against the digest/payload.
+     * Use this when the signature session used a legacy RSA algorithm (e.g. sha256WithRSAEncryption).
+     *
+     * @param signatureValue       the signature value to validate
+     * @param payload              the digest or data that was signed (typically the hash that was sent to Smart-ID)
+     * @param certificate          X509 certificate used for signature validation
+     * @param signatureAlgorithmName Smart-ID API algorithm name (e.g. sha512WithRSAEncryption)
+     * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
+     */
+    void validate(byte[] signatureValue,
+                  byte[] payload,
+                  X509Certificate certificate,
+                  String signatureAlgorithmName);
 }

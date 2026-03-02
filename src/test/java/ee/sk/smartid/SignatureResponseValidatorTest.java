@@ -110,6 +110,20 @@ class SignatureResponseValidatorTest {
     }
 
     @Test
+    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters() {
+        SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION.getAlgorithmName());
+        sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
+        sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
+
+        SignatureResponse response = signatureResponseValidator.validate(sessionStatus, CertificateLevel.QUALIFIED);
+
+        assertEquals("OK", response.getEndResult());
+        assertEquals(SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION.getAlgorithmName(), response.getAlgorithmName());
+        assertEquals(SignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION, response.getSignatureAlgorithm());
+        assertTrue(response.getRsaSsaPssParameters() == null);
+    }
+
+    @Test
     void validate_stateParameterMissing() {
         SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
         sessionStatus.setState(null);

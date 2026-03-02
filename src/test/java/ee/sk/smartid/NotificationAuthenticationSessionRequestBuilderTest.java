@@ -29,6 +29,7 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -58,6 +59,7 @@ import org.mockito.ArgumentCaptor;
 import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
@@ -133,7 +135,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
     }
 
     @ParameterizedTest
-    @EnumSource
+    @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS"})
     void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
         when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
         NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
@@ -145,6 +147,15 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
 
         assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void initAuthenticationSession_legacyRsaSignatureAlgorithm_throwException(SignatureAlgorithm signatureAlgorithm) {
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+
+        var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
+        assertTrue(exception.getMessage().contains("supported for authentication"));
     }
 
     @ParameterizedTest

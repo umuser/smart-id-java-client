@@ -145,7 +145,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @EnumSource
+        @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS"})
         void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(toDeviceLinkAuthenticationResponse());
@@ -278,6 +278,15 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
             var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'signatureAlgorithm' must be set", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+        void initAuthenticationSession_legacyRsaSignatureAlgorithm_throwException(SignatureAlgorithm signatureAlgorithm) {
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
+            assertTrue(exception.getMessage().contains("supported for authentication"));
         }
 
         @ParameterizedTest
