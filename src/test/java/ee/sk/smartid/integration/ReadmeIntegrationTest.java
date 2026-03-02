@@ -759,7 +759,7 @@ public class ReadmeIntegrationTest {
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
             assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOEE-40504040001-DEMO-Q", signatureResponse.getDocumentNumber());
+            assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
             assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
             assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
