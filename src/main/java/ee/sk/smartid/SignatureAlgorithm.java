@@ -51,32 +51,38 @@ public enum SignatureAlgorithm {
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-256. Signing only; no signatureAlgorithmParameters.
      */
-    SHA256_WITH_RSA_ENCRYPTION("sha256WithRSAEncryption", true, false, "SHA256withRSA"),
+    SHA256_WITH_RSA_ENCRYPTION("sha256WithRSAEncryption", true, false, "SHA256withRSA", HashAlgorithm.SHA_256),
 
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-384. Signing only; no signatureAlgorithmParameters.
      */
-    SHA384_WITH_RSA_ENCRYPTION("sha384WithRSAEncryption", true, false, "SHA384withRSA"),
+    SHA384_WITH_RSA_ENCRYPTION("sha384WithRSAEncryption", true, false, "SHA384withRSA", HashAlgorithm.SHA_384),
 
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-512. Signing only; no signatureAlgorithmParameters.
      */
-    SHA512_WITH_RSA_ENCRYPTION("sha512WithRSAEncryption", true, false, "SHA512withRSA");
+    SHA512_WITH_RSA_ENCRYPTION("sha512WithRSAEncryption", true, false, "SHA512withRSA", HashAlgorithm.SHA_512);
 
     private final String algorithmName;
     private final boolean legacyRsa;
     private final boolean usedForAuthentication;
     private final String jceAlgorithmName;
+    private final HashAlgorithm hashAlgorithmForLegacy;
 
     SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication) {
-        this(algorithmName, legacyRsa, usedForAuthentication, algorithmName);
+        this(algorithmName, legacyRsa, usedForAuthentication, algorithmName, null);
     }
 
     SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication, String jceAlgorithmName) {
+        this(algorithmName, legacyRsa, usedForAuthentication, jceAlgorithmName, null);
+    }
+
+    SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication, String jceAlgorithmName, HashAlgorithm hashAlgorithmForLegacy) {
         this.algorithmName = algorithmName;
         this.legacyRsa = legacyRsa;
         this.usedForAuthentication = usedForAuthentication;
         this.jceAlgorithmName = jceAlgorithmName;
+        this.hashAlgorithmForLegacy = hashAlgorithmForLegacy;
     }
 
     /**
@@ -116,6 +122,16 @@ public enum SignatureAlgorithm {
      */
     public String getJceAlgorithmName() {
         return jceAlgorithmName;
+    }
+
+    /**
+     * Returns the hash algorithm for legacy RSA algorithms. Used when creating {@link SignableData}
+     * so that {@link SignableData#calculateHash()} uses the correct hash for the signature algorithm.
+     *
+     * @return the hash algorithm for legacy algorithms, or null for RSASSA_PSS
+     */
+    public HashAlgorithm getHashAlgorithmForLegacy() {
+        return hashAlgorithmForLegacy;
     }
 
     /**

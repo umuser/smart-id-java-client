@@ -697,8 +697,7 @@ public class ReadmeIntegrationTest {
         }
 
         @ParameterizedTest
-        // For signature algorithms SHA256_WITH_RSA_ENCRYPTION and SHA384_WITH_RSA_ENCRYPTION demo service returns HTTP 400 Bad Request
-        @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS", "SHA512_WITH_RSA_ENCRYPTION"})
+        @EnumSource(SignatureAlgorithm.class)
         void signature_withSemanticsIdentifier(SignatureAlgorithm signatureAlgorithm) {
             var semanticIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
@@ -729,8 +728,9 @@ public class ReadmeIntegrationTest {
             CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus, certificateLevel);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             // Create the Semantics Identifier
             var semanticsIdentifier = new SemanticsIdentifier(
@@ -773,8 +773,7 @@ public class ReadmeIntegrationTest {
         }
 
         @ParameterizedTest
-        // For signature algorithms SHA256_WITH_RSA_ENCRYPTION and SHA384_WITH_RSA_ENCRYPTION demo service returns HTTP 400 Bad Request
-        @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS", "SHA512_WITH_RSA_ENCRYPTION"})
+        @EnumSource(SignatureAlgorithm.class)
         void signature_withDocumentNumber(SignatureAlgorithm signatureAlgorithm) {
             String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
@@ -799,8 +798,9 @@ public class ReadmeIntegrationTest {
 
             // For example use digidoc4j with SignatureBuilder to create DataToSign using `certificateByDocumentNumber.certificate()`
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
