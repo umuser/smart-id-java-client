@@ -50,6 +50,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
@@ -72,6 +74,7 @@ import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
+import ee.sk.smartid.SignatureAlgorithm;
 import ee.sk.smartid.SignatureCertificatePurposeValidator;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactory;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactoryImpl;
@@ -693,8 +696,10 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
 
-        @Test
-        void signature_withSemanticsIdentifier() {
+        @ParameterizedTest
+        // For signature algorithms SHA256_WITH_RSA_ENCRYPTION and SHA384_WITH_RSA_ENCRYPTION demo service returns HTTP 400 Bad Request
+        @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS", "SHA512_WITH_RSA_ENCRYPTION"})
+        void signature_withSemanticsIdentifier(SignatureAlgorithm signatureAlgorithm) {
             var semanticIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
                     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -736,6 +741,7 @@ public class ReadmeIntegrationTest {
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withInteractions(List.of(
@@ -766,8 +772,10 @@ public class ReadmeIntegrationTest {
             assertNotNull(signatureResponse.getCertificate());
         }
 
-        @Test
-        void signature_withDocumentNumber() {
+        @ParameterizedTest
+        // For signature algorithms SHA256_WITH_RSA_ENCRYPTION and SHA384_WITH_RSA_ENCRYPTION demo service returns HTTP 400 Bad Request
+        @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS", "SHA512_WITH_RSA_ENCRYPTION"})
+        void signature_withDocumentNumber(SignatureAlgorithm signatureAlgorithm) {
             String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
             CertificateLevel certificateLevel = CertificateLevel.QSCD;
@@ -796,6 +804,7 @@ public class ReadmeIntegrationTest {
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withDocumentNumber(documentNumber)
                     .withInteractions(List.of(
