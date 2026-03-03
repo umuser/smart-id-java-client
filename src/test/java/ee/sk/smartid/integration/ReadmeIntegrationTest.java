@@ -768,7 +768,7 @@ public class ReadmeIntegrationTest {
 
         @Test
         void signature_withDocumentNumber() {
-            String documentNumber = "PNOEE-40504040001-DEMO-Q";
+            String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
             CertificateLevel certificateLevel = CertificateLevel.QSCD;
             // Query the certificate by document number to be used for creating the DataToSign
