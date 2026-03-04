@@ -149,7 +149,7 @@ class NotificationAuthenticationResponseValidatorTest {
                 certificateLevel,
                 SignatureProtocol.ACSP_V2.name(),
                 new AcspV2SignatureProtocolParameters("3mhDkd0ulDR/WVZx678FcrNw4pUhrZxcQsmejf8jQ1HtSp3GAxCH/Fi9EEiuULp44G/KNKONPXZELqCSZw4AoA==",
-                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
                 "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbiB3aXRoIFNtYXJ0LUlEIGRlbW8/In1d",
                 null,
@@ -180,7 +180,7 @@ class NotificationAuthenticationResponseValidatorTest {
         signature.setUserChallenge("RvrVNS1GJYCsuEnEqPCdHHn5vl65F3XiBjmxB4zSosw");
         signature.setValue(signatureValue);
         signature.setFlowType(FlowType.NOTIFICATION.getDescription());
-        signature.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        signature.setSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
         signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
 
         var cert = new SessionCertificate();

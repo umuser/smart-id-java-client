@@ -177,7 +177,7 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
         if (StringUtil.isEmpty(sessionSignature.getSignatureAlgorithm())) {
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithm' is empty");
         }
-        if (!SignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
+        if (!AuthenticationSignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
             logger.error("Authentication session status field 'signature.signatureAlgorithm' has invalid value: {}", sessionSignature.getSignatureAlgorithm());
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithm' has unsupported value");
         }

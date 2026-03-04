@@ -110,9 +110,9 @@ public class SignatureResponseValidator {
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        signatureResponse.setSignatureAlgorithm(SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()));
+        signatureResponse.setSignatureAlgorithm(SigningSignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()));
 
-        if (!SignatureAlgorithm.isLegacyRsa(sessionSignature.getSignatureAlgorithm())) {
+        if (!SigningSignatureAlgorithm.isLegacyRsa(sessionSignature.getSignatureAlgorithm())) {
             SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
             var rsaSsaPssParams = new RsaSsaPssParameters();
             rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
@@ -237,7 +237,7 @@ public class SignatureResponseValidator {
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
-        if (!SignatureAlgorithm.isLegacyRsa(signature.getSignatureAlgorithm())) {
+        if (!SigningSignatureAlgorithm.isLegacyRsa(signature.getSignatureAlgorithm())) {
             validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
         }
     }
@@ -256,8 +256,8 @@ public class SignatureResponseValidator {
             throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' is missing");
         }
 
-        if (!SignatureAlgorithm.isSupported(signatureAlgorithm)) {
-            List<String> possibleValues = Arrays.stream(SignatureAlgorithm.values()).map(SignatureAlgorithm::getAlgorithmName).toList();
+        if (!SigningSignatureAlgorithm.isSupported(signatureAlgorithm)) {
+            List<String> possibleValues = Arrays.stream(SigningSignatureAlgorithm.values()).map(SigningSignatureAlgorithm::getAlgorithmName).toList();
             logger.error("Signature session status field 'signature.signatureAlgorithm' has unsupported value: {}. Possible values: {}", signatureAlgorithm, possibleValues);
             throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' has unsupported value");
         }

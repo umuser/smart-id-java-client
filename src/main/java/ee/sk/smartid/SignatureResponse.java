@@ -40,7 +40,7 @@ public class SignatureResponse implements Serializable {
     private String endResult;
     private String signatureValueInBase64;
     private String algorithmName;
-    private SignatureAlgorithm signatureAlgorithm;
+    private SigningSignatureAlgorithm signatureAlgorithm;
     private FlowType flowType;
     private X509Certificate certificate;
     private CertificateLevel requestedCertificateLevel;
@@ -124,7 +124,7 @@ public class SignatureResponse implements Serializable {
      *
      * @return the signature algorithm
      */
-    public SignatureAlgorithm getSignatureAlgorithm() {
+    public SigningSignatureAlgorithm getSignatureAlgorithm() {
         return signatureAlgorithm;
     }
 
@@ -133,7 +133,7 @@ public class SignatureResponse implements Serializable {
      *
      * @param signatureAlgorithm the signature algorithm
      */
-    public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public void setSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 

@@ -57,7 +57,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel;
     private String rpChallenge;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private AuthenticationSignatureAlgorithm signatureAlgorithm = AuthenticationSignatureAlgorithm.RSASSA_PSS;
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
@@ -130,7 +130,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public NotificationAuthenticationSessionRequestBuilder withSignatureAlgorithm(AuthenticationSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -274,9 +274,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
         }
         if (signatureAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
-        }
-        if (!signatureAlgorithm.isUsedForAuthentication()) {
-            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be an algorithm supported for authentication (e.g. RSASSA_PSS). Legacy RSA algorithms are only supported for signing");
         }
         if (hashAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'hashAlgorithm' must be set");

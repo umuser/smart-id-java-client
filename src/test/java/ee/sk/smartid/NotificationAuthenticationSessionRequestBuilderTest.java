@@ -135,8 +135,8 @@ class NotificationAuthenticationSessionRequestBuilderTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = SignatureAlgorithm.class, names = {"RSASSA_PSS"})
-    void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+    @EnumSource(value = AuthenticationSignatureAlgorithm.class, names = {"RSASSA_PSS"})
+    void initAuthenticationSession_signatureAlgorithm_ok(AuthenticationSignatureAlgorithm signatureAlgorithm) {
         when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
         NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
 
@@ -147,15 +147,6 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
 
         assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void initAuthenticationSession_legacyRsaSignatureAlgorithm_throwException(SignatureAlgorithm signatureAlgorithm) {
-        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
-
-        var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
-        assertTrue(exception.getMessage().contains("supported for authentication"));
     }
 
     @ParameterizedTest

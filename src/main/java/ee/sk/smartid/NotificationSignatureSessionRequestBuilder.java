@@ -69,7 +69,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private DigestInput digestInput;
 
     /**
@@ -186,7 +186,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public NotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public NotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }

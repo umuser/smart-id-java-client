@@ -231,7 +231,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
         signature.setUserChallenge(userChallengeVerifier);
         signature.setValue(toBase64("signatureValue"));
         signature.setFlowType(flowType.getDescription());
-        signature.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        signature.setSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
         signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
 
         var cert = new SessionCertificate();
@@ -254,7 +254,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
                 "DEMO",
                 certificateLevel,
                 SignatureProtocol.ACSP_V2,
-                new AcspV2SignatureProtocolParameters("rpChallenge", SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
+                new AcspV2SignatureProtocolParameters("rpChallenge", AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
                 InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Log in?", null))),
                 null,
                 null,

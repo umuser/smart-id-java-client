@@ -100,8 +100,8 @@ class SignatureValueValidatorImplTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_invalidSignature_throwException(SignatureAlgorithm algorithm) throws CertificateException {
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
                         "invalidSignature".getBytes(StandardCharsets.UTF_8),
@@ -118,7 +118,7 @@ class SignatureValueValidatorImplTest {
                         SIGNATURE_VALUE,
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName()));
+                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName()));
         assertTrue(ex.getMessage().contains("not a legacy RSA"));
     }
 

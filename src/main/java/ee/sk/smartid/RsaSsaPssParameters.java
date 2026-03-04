@@ -31,7 +31,7 @@ package ee.sk.smartid;
  */
 public class RsaSsaPssParameters {
 
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private final String signatureAlgorithmName = "rsassa-pss";
 
     private HashAlgorithm digestHashAlgorithm;
     private MaskGenAlgorithm maskGenAlgorithm;
@@ -85,12 +85,12 @@ public class RsaSsaPssParameters {
     }
 
     /**
-     * Gets the signature algorithm
+     * Gets the signature algorithm name
      *
-     * @return the signature algorithm; see {@link SignatureAlgorithm}
+     * @return the signature algorithm name
      */
-    public SignatureAlgorithm getSignatureAlgorithm() {
-        return signatureAlgorithm;
+    public String getSignatureAlgorithmName() {
+        return signatureAlgorithmName;
     }
 
     /**

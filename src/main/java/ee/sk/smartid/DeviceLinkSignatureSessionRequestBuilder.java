@@ -63,7 +63,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private String initialCallbackUrl;
     private DigestInput digestInput;
 
@@ -183,7 +183,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }

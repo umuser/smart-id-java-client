@@ -111,8 +111,8 @@ class SignatureResponseValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = SignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters(SignatureAlgorithm signatureAlgorithm) {
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters(SigningSignatureAlgorithm signatureAlgorithm) {
         SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", signatureAlgorithm.getAlgorithmName());
         sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
         sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
@@ -558,7 +558,7 @@ class SignatureResponseValidatorTest {
         sessionCertificate.setValue(CertificateUtil.getEncodedCertificateData(NQ_SIGNING_CERTIFICATE));
 
         var params = toSessionSignatureAlgorithmParams();
-        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params, FlowType.QR);
+        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params, FlowType.QR);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");

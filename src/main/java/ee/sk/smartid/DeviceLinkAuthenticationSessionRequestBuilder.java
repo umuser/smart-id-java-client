@@ -59,7 +59,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String rpChallenge;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private AuthenticationSignatureAlgorithm signatureAlgorithm = AuthenticationSignatureAlgorithm.RSASSA_PSS;
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
@@ -136,7 +136,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(AuthenticationSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -302,9 +302,6 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         }
         if (signatureAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
-        }
-        if (!signatureAlgorithm.isUsedForAuthentication()) {
-            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be an algorithm supported for authentication (e.g. RSASSA_PSS). Legacy RSA algorithms are only supported for signing");
         }
         if (hashAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'hashAlgorithm' must be set");

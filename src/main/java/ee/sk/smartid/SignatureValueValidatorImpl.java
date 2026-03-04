@@ -83,11 +83,11 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
         if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
         }
-        if (!SignatureAlgorithm.isLegacyRsa(signatureAlgorithmName)) {
+        if (!SigningSignatureAlgorithm.isLegacyRsa(signatureAlgorithmName)) {
             throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithmName + "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
         }
         try {
-            SignatureAlgorithm algorithm = SignatureAlgorithm.fromString(signatureAlgorithmName);
+            SigningSignatureAlgorithm algorithm = SigningSignatureAlgorithm.fromString(signatureAlgorithmName);
             Signature signature = Signature.getInstance(algorithm.getJceAlgorithmName());
             signature.initVerify(certificate.getPublicKey());
             signature.update(payload);
@@ -106,11 +106,11 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
                     new MGF1ParameterSpec(rsaSsaPssParameters.getMaskHashAlgorithm().getAlgorithmName()),
                     rsaSsaPssParameters.getSaltLength(),
                     rsaSsaPssParameters.getTrailerField().getPssSpecValue());
-            var signature = Signature.getInstance(rsaSsaPssParameters.getSignatureAlgorithm().getAlgorithmName());
+            var signature = Signature.getInstance(rsaSsaPssParameters.getSignatureAlgorithmName());
             signature.setParameter(params);
             return signature;
         } catch (NoSuchAlgorithmException ex) {
-            logger.error("Invalid signature algorithm was provided: {}", rsaSsaPssParameters.getSignatureAlgorithm());
+            logger.error("Invalid signature algorithm name was provided: {}", rsaSsaPssParameters.getSignatureAlgorithmName());
             throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
         } catch (InvalidAlgorithmParameterException ex) {
             throw new UnprocessableSmartIdResponseException("Invalid signature algorithm parameters were provided", ex);

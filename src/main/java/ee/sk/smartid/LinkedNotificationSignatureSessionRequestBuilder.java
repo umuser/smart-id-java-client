@@ -54,7 +54,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
     private String relyingPartyName;
     private String documentNumber;
     private DigestInput digestInput;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private String linkedSessionID;
     private List<DeviceLinkInteraction> interactions;
     private CertificateLevel certificateLevel;
@@ -151,7 +151,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
      * @param signatureAlgorithm The signature algorithm
      * @return this builder
      */
-    public LinkedNotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public LinkedNotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }

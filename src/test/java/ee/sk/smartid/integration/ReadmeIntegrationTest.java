@@ -74,7 +74,7 @@ import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
-import ee.sk.smartid.SignatureAlgorithm;
+import ee.sk.smartid.SigningSignatureAlgorithm;
 import ee.sk.smartid.SignatureCertificatePurposeValidator;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactory;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactoryImpl;
@@ -697,8 +697,8 @@ public class ReadmeIntegrationTest {
         }
 
         @ParameterizedTest
-        @EnumSource(SignatureAlgorithm.class)
-        void signature_withSemanticsIdentifier(SignatureAlgorithm signatureAlgorithm) {
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withSemanticsIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
             var semanticIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
                     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -773,8 +773,8 @@ public class ReadmeIntegrationTest {
         }
 
         @ParameterizedTest
-        @EnumSource(SignatureAlgorithm.class)
-        void signature_withDocumentNumber(SignatureAlgorithm signatureAlgorithm) {
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
             String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
             CertificateLevel certificateLevel = CertificateLevel.QSCD;

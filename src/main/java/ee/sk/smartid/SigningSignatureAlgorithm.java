@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,58 +29,43 @@ package ee.sk.smartid;
 import java.util.Arrays;
 
 /**
- * Signature algorithms supported by Smart-ID API.
+ * Signature algorithms supported for signing sessions.
  * <p>
- * Algorithms are divided by use case:
- * <ul>
- *   <li><b>Authentication</b>: only {@link #RSASSA_PSS} is supported for authentication sessions.</li>
- *   <li><b>Signing</b>: {@link #RSASSA_PSS} and the RSASSA-PKCS#1 v1.5 algorithms
- *   ({@link #SHA256_WITH_RSA_ENCRYPTION}, {@link #SHA384_WITH_RSA_ENCRYPTION}, {@link #SHA512_WITH_RSA_ENCRYPTION})
- *   are supported for signature sessions.</li>
- * </ul>
- * RSASSA-PKCS#1 v1.5 algorithms do not use {@code signatureAlgorithmParameters} in the API request or response.
+ * Includes RSASSA-PSS and RSASSA-PKCS#1 v1.5 algorithms. The latter are marked as legacy RSA.
  */
-public enum SignatureAlgorithm {
+public enum SigningSignatureAlgorithm {
 
     /**
      * RSASSA-PSS (RSA Probabilistic Signature Scheme) as defined in PKCS #1 v2.1.
-     * Supported for both authentication and signing.
      */
-    RSASSA_PSS("rsassa-pss", false, true),
+    RSASSA_PSS("rsassa-pss", false, "rsassa-pss", null),
 
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-256. Signing only; no signatureAlgorithmParameters.
      */
-    SHA256_WITH_RSA_ENCRYPTION("sha256WithRSAEncryption", true, false, "SHA256withRSA", HashAlgorithm.SHA_256),
+    SHA256_WITH_RSA_ENCRYPTION("sha256WithRSAEncryption", true, "SHA256withRSA", HashAlgorithm.SHA_256),
 
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-384. Signing only; no signatureAlgorithmParameters.
      */
-    SHA384_WITH_RSA_ENCRYPTION("sha384WithRSAEncryption", true, false, "SHA384withRSA", HashAlgorithm.SHA_384),
+    SHA384_WITH_RSA_ENCRYPTION("sha384WithRSAEncryption", true, "SHA384withRSA", HashAlgorithm.SHA_384),
 
     /**
      * RSASSA-PKCS#1 v1.5 with SHA-512. Signing only; no signatureAlgorithmParameters.
      */
-    SHA512_WITH_RSA_ENCRYPTION("sha512WithRSAEncryption", true, false, "SHA512withRSA", HashAlgorithm.SHA_512);
+    SHA512_WITH_RSA_ENCRYPTION("sha512WithRSAEncryption", true, "SHA512withRSA", HashAlgorithm.SHA_512);
 
     private final String algorithmName;
     private final boolean legacyRsa;
-    private final boolean usedForAuthentication;
     private final String jceAlgorithmName;
     private final HashAlgorithm hashAlgorithmForLegacy;
 
-    SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication) {
-        this(algorithmName, legacyRsa, usedForAuthentication, algorithmName, null);
-    }
-
-    SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication, String jceAlgorithmName) {
-        this(algorithmName, legacyRsa, usedForAuthentication, jceAlgorithmName, null);
-    }
-
-    SignatureAlgorithm(String algorithmName, boolean legacyRsa, boolean usedForAuthentication, String jceAlgorithmName, HashAlgorithm hashAlgorithmForLegacy) {
+    SigningSignatureAlgorithm(String algorithmName,
+                              boolean legacyRsa,
+                              String jceAlgorithmName,
+                              HashAlgorithm hashAlgorithmForLegacy) {
         this.algorithmName = algorithmName;
         this.legacyRsa = legacyRsa;
-        this.usedForAuthentication = usedForAuthentication;
         this.jceAlgorithmName = jceAlgorithmName;
         this.hashAlgorithmForLegacy = hashAlgorithmForLegacy;
     }
@@ -105,16 +90,6 @@ public enum SignatureAlgorithm {
     }
 
     /**
-     * Returns whether this algorithm is supported for authentication sessions.
-     * Only RSASSA-PSS is supported for authentication.
-     *
-     * @return true if the algorithm may be used for authentication
-     */
-    public boolean isUsedForAuthentication() {
-        return usedForAuthentication;
-    }
-
-    /**
      * Returns the JCE standard algorithm name for {@link java.security.Signature#getInstance(String)}.
      * For legacy RSA algorithms this is the name used to verify the signature (e.g. SHA256withRSA).
      *
@@ -135,13 +110,13 @@ public enum SignatureAlgorithm {
     }
 
     /**
-     * Checks if the provided signature algorithm is supported.
+     * Checks if the provided signature algorithm is supported for signing.
      *
      * @param signatureAlgorithm the signature algorithm name to check
      * @return true if the signature algorithm is supported, false otherwise
      */
     public static boolean isSupported(String signatureAlgorithm) {
-        return Arrays.stream(SignatureAlgorithm.values())
+        return Arrays.stream(SigningSignatureAlgorithm.values())
                 .anyMatch(s -> s.getAlgorithmName().equals(signatureAlgorithm));
     }
 
@@ -152,23 +127,24 @@ public enum SignatureAlgorithm {
      * @return true if legacy RSA, false otherwise
      */
     public static boolean isLegacyRsa(String signatureAlgorithm) {
-        return Arrays.stream(SignatureAlgorithm.values())
+        return Arrays.stream(SigningSignatureAlgorithm.values())
                 .filter(s -> s.getAlgorithmName().equals(signatureAlgorithm))
-                .anyMatch(SignatureAlgorithm::isLegacyRsa);
+                .anyMatch(SigningSignatureAlgorithm::isLegacyRsa);
     }
 
     /**
      * Converts a string representation of a signature algorithm to its corresponding enum value.
      *
      * @param signatureAlgorithm the signature algorithm name
-     * @return the corresponding SignatureAlgorithm enum value
+     * @return the corresponding SigningSignatureAlgorithm enum value
      * @throws IllegalArgumentException if the provided signature algorithm is not supported
      */
-    public static SignatureAlgorithm fromString(String signatureAlgorithm) {
+    public static SigningSignatureAlgorithm fromString(String signatureAlgorithm) {
         return Arrays
-                .stream(SignatureAlgorithm.values())
+                .stream(SigningSignatureAlgorithm.values())
                 .filter(s -> s.getAlgorithmName().equals(signatureAlgorithm))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Invalid signatureAlgorithm value: " + signatureAlgorithm));
     }
 }
+
