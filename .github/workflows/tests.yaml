@@ -4,7 +4,7 @@ on:
     push:
       branches: [ "master", "v3.1" ]
     pull_request:
-      branches: [ "master" ]
+      branches: [ "master", "legacy-signature-algorithms" ]
 
 permissions:
     contents: read
