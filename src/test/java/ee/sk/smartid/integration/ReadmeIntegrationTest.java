@@ -467,7 +467,7 @@ public class ReadmeIntegrationTest {
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
                 // Querying the sessions status
-                SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+                SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
                 CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
@@ -720,7 +720,7 @@ public class ReadmeIntegrationTest {
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
             // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+            SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
