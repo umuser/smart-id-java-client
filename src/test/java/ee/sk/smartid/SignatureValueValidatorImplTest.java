@@ -101,18 +101,18 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
+    void validate_legacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
                         "invalidSignature".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
                         algorithm.getAlgorithmName()));
-        assertTrue(ex.getMessage().contains("Signature value validation failed") || ex.getMessage().contains("does not match"));
+        assertEquals("Signature value validation failed", ex.getMessage());
     }
 
     @Test
-    void validate_legacyRsa_nonLegacyAlgorithmName_throwException() throws CertificateException {
+    void validate_legacyRsa_nonLegacyAlgorithmName_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
                         SIGNATURE_VALUE,
