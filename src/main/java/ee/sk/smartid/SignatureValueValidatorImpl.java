@@ -53,9 +53,12 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
                          byte[] payload,
                          X509Certificate certificate,
                          RsaSsaPssParameters rsaSsaPssParameters) {
-        validateInputs(signatureValue, payload, certificate, rsaSsaPssParameters);
+        validateCommonInput(signatureValue, payload, certificate);
+        if (rsaSsaPssParameters == null) {
+            throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' is not provided");
+        }
         try {
-            Signature result = getSignature(rsaSsaPssParameters);
+            Signature result = getRsaSsaPssSignature(rsaSsaPssParameters);
             result.initVerify(certificate.getPublicKey());
             result.update(payload);
             if (!result.verify(signatureValue)) {
@@ -71,20 +74,13 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
                          byte[] payload,
                          X509Certificate certificate,
                          String signatureAlgorithmName) {
-        if (signatureValue == null) {
-            throw new SmartIdClientException("Parameter 'signatureValue' is not provided");
-        }
-        if (payload == null) {
-            throw new SmartIdClientException("Parameter 'payload' is not provided");
-        }
-        if (certificate == null) {
-            throw new SmartIdClientException("Parameter 'certificate' is not provided");
-        }
+        validateCommonInput(signatureValue, payload, certificate);
         if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
         }
         if (!SigningSignatureAlgorithm.isLegacyRsa(signatureAlgorithmName)) {
-            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithmName + "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
+            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithmName +
+                    "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
         }
         try {
             SigningSignatureAlgorithm algorithm = SigningSignatureAlgorithm.fromString(signatureAlgorithmName);
@@ -99,7 +95,7 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
         }
     }
 
-    private Signature getSignature(RsaSsaPssParameters rsaSsaPssParameters) {
+    private Signature getRsaSsaPssSignature(RsaSsaPssParameters rsaSsaPssParameters) {
         try {
             var params = new PSSParameterSpec(rsaSsaPssParameters.getDigestHashAlgorithm().getAlgorithmName(),
                     rsaSsaPssParameters.getMaskGenAlgorithm().getMgfName(),
@@ -117,10 +113,9 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
         }
     }
 
-    private static void validateInputs(byte[] signatureValue,
-                                       byte[] payload,
-                                       X509Certificate certificate,
-                                       RsaSsaPssParameters rsaSsaPssParameters) {
+    private static void validateCommonInput(byte[] signatureValue,
+                                            byte[] payload,
+                                            X509Certificate certificate) {
         if (signatureValue == null) {
             throw new SmartIdClientException("Parameter 'signatureValue' is not provided");
         }
@@ -129,9 +124,6 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
         }
         if (certificate == null) {
             throw new SmartIdClientException("Parameter 'certificate' is not provided");
-        }
-        if (rsaSsaPssParameters == null) {
-            throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' is not provided");
         }
     }
 }

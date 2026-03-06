@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -51,10 +52,17 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 class SignatureValueValidatorImplTest {
 
-    // TODO - 22.08.25: replace these values when test accounts are available
-    private static final String CERT = "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";
-    private static final byte[] PAYLOAD = Base64.getDecoder().decode(("PGRzOlNpZ25lZEluZm8geG1sbnM6ZHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyMiPjxkczpDYW5vbmljYWxpemF0aW9uTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIj48L2RzOkNhbm9uaWNhbGl6YXRpb25NZXRob2Q" + "+PGRzOlNpZ25hdHVyZU1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMDQveG1sZHNpZy1tb3JlI3JzYS1zaGE1MTIiPjwvZHM6U2lnbmF0dXJlTWV0aG9kPjxkczpSZWZlcmVuY2UgSWQ9InItaWQtNzcwMDA4OTNlNWU1YmVjOGMwY2IyOThjNmFkMGY0YTQtMSIgVVJJPSJkdW1teS5wZGYiPjxkczpEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGVuYyNzaGEyNTYiPjwvZHM6RGlnZXN0TWV0aG9kPjxkczpEaWdlc3RWYWx1ZT5QZmVkTkt1OHFaTUk1NXk1UkdIQmlUV0NZRTFvTXBwQi9VdnNHSVhtcmJRPTwvZHM6RGlnZXN0VmFsdWU+PC9kczpSZWZlcmVuY2U+PGRzOlJlZmVyZW5jZSBUeXBlPSJodHRwOi8vdXJpLmV0c2kub3JnLzAxOTAzI1NpZ25lZFByb3BlcnRpZXMiIFVSST0iI3hhZGVzLWlkLTc3MDAwODkzZTVlNWJlYzhjMGNiMjk4YzZhZDBmNGE0Ij48ZHM6VHJhbnNmb3Jtcz48ZHM6VHJhbnNmb3JtIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIj48L2RzOlRyYW5zZm9ybT48L2RzOlRyYW5zZm9ybXM+PGRzOkRpZ2VzdE1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMDQveG1sZW5jI3NoYTI1NiI+PC9kczpEaWdlc3RNZXRob2Q+PGRzOkRpZ2VzdFZhbHVlPjFZd014blRUYmwwZXB5S0g0OEZ0WXFDb3pNbzAxem03NWpwV1pWNDJJNlk9PC9kczpEaWdlc3RWYWx1ZT48L2RzOlJlZmVyZW5jZT48L2RzOlNpZ25lZEluZm8+").getBytes(StandardCharsets.UTF_8));
-    private static final byte[] SIGNATURE_VALUE = Base64.getDecoder().decode("UEVKOrz3Mr+qAXyOjGEt3Nnb8andzicBcEdbb4T2qVyGUslHdeJfgkXccPqBnjmEbL7xoU7eHVkO02K+XNseVY5UBHnXDlMBj1TyCnfelfiZFpAppgWmHKBXC11yE1OhtQ5/siaokPGBX1nZM2rzGlHYWxXYZrOGHCrm7gQEbClL342N6bEzeVVVPnxnxDEkzpNMFvY8UIL3C55WPPNKLBzFwSfduNcLaBiHc4ghaIiJebQc1h+Kad5OAYeu35v70k4HVePbDDp1Cb7RXfMRyUx7GNFSTZiKrG16XO8krp+d9T10SGRbZNoTzxvXBjtb8SjXM6Zvx0tiNdVnsWBrEylGzjS2DVU2+MDbek9QxlxqUU5E5H/WrelywgGTEzfZekowjofQjkYXaEAvNTK8x8Me1wIJThZwfrOy6H8MyPAdgAwl7fDwsZG6QhRCeG+9VY4CtmcII6YMZccCFCy9X3SJvXga4OcSrPi+Nwh3tfvJ5pkYvLliVKSCDpslTZk7JQYcQsJ1DVefMW6BfA+V3iX35mG/VHPo789BpzlZL6Ebs/dxNSEnyyWTDECFl2k2/B38w9jO4OuFLLg/U0AvM6ZLNlLWUjsKKg1s4U+SGlLc7r3hxaWCCwx4/NP2h8f3MTquxOCt+7WrjvCNOQ33bKcFGjYyCWpfGAfVgfMenp4oa40A1+Or+Px4Sd5yD3ZTnPSMYh2UzFZOiejGAS/koBYhn60P5PKRpEkC0nq+WQJD58soelH1EKifLoBtYNzhNOAuOfGRI5nEsW94TZ8hbC/mIEBmMnhKr9Lq/+glxbqskwOavWIF5xeWTKeSt2ErvgtNxX3hTlGxdNavwPi+/qtLikrNoirE26t1WFyPMaeH6hm0rIW42h5c0IvsXrQ4258uJzpZPe/RLbjdy62wi1S35PmowFUFImlHDKSIj4plEVXkrApZDV+/bL0VR6PNr7bsIZqgamL9OyLm6vTunP+A7Q+zpaZxuun17SC1QsthiGGBk03uf4CpNVVUpsO3".getBytes(StandardCharsets.UTF_8));
+    // person PNOEE-40504040001 certificate from Smart-ID mock
+    private static final String CERT = "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";
+    // original data as string is "dataToSign"
+    private static final byte[] PAYLOAD = Base64.getDecoder().decode("ZGF0YVRvU2lnbg==");
+    // signatures from Smart-ID mock
+    private static final Map<SigningSignatureAlgorithm, byte[]> SIGNATURE_VALUE_MAP = Map.of(
+            SigningSignatureAlgorithm.RSASSA_PSS, Base64.getDecoder().decode("iBgRsurf7Hc0uEUYAnRR3IfQ8JXNvYM/Ft9TvWtQvnatwzLLDDukhpPCRPPP5CtNrPvKVLSLSJ9GRMz1w6lHqrlooWJm74sQaD0o6QAl5UrdaJe5ez9zn/jBPh0p+E5Z1TC9bYFTibyRHGX1W6LFTP+/wDS0eGLURnc82Q0CxQjjqzlpOQXBFqPYLmCFn8ps2AAzzKPIKLimebkuOYzYWGFT25qaiWN8ZHif8RysEYex07eTmsaLl/ZeO5DURZtJaaIFFQURcD7XIgg1iy4jns3Q3T+E5lfdPMwocn3CZgZNyx0gsoiJF0A3LRjN9lb5MS3SCN697i8EFZxsOXg/IJRWjwp2afeRgJunwFK/STkeVVDwdOAgSJ0DY4/BjasFWRuBSdrkTPPjzAFvJa00DRofS1GMaayjcVgw4H7QAvAXoden/QTLUMIy8nJSfVTfAV42dbfBLrlkenL2fWfyR6gr1s8Lkh9beFM+5AYjfwNlsuy1iY6riqVtcFDl8glpE0bxo706W143RPRxfo2VxJkk+hZtcSaunMkFCjFxxzHUOgh2Jmtz7fmWmWtknnTcc6uBhB2w00y4lLrQ80c80TMO8K6uivZU2WQ7PDxvJ0uOJXDXJItd36Aa7wwIV/XPefkDrCBRyUdpKKbgjSO3S0cbRhnvVzSDy8t95wFheXKg8uJ8bbU/f2ZpFpCN+dk+HTgSNffh9dpCV4FgjDhMYE1Oz7Ennf/gLWW5FePg7K9Xd1d9T5DfBb/YGVvxOOoleQr0DTbarCwGaUnyTSatgcSMrtSrQlq0nh1p3RKrJF8qluqNqdDvhFLMEEUHt66Zkg/JEiT/k3+PYMk43E2TsIaqTOrs+AiTvZRuJlwhXKAUSApG6U76UdsWF3Ui7pGBRlwHDbJtq4qsAhUiEqSqfFnsGeIMxvUT9pv7aasStv13G7RzehGtxoOqkae8ajy7prmFgRl0Om8xwcHWXRGlMFTppeagsjG5ilKYkj7RpWo2NOXCwsOx5KXQxu3xcv1Y"),
+            SigningSignatureAlgorithm.SHA256_WITH_RSA_ENCRYPTION, Base64.getDecoder().decode("cRZanVdkMHJAuBYKpmmwT4TowxqibpwpFR//XJo3Cx71XN55XlMeTrrhjrNs/IYr2y5plRFD9n8OkrvkQIK/dSzAhnnwVirMFmJv/NjxXkb1HisKCS1XMEcNtpW17k5N6PU8yOD6jLZqcMmGCIjO/PQQZfIwKXJCOC1YC0oAmaBDvVMpT+j4jaxoGhdzpjvf5vaueam94K9DmMRkJaoCxo93WGa04dZgYOz62GnFp991bOQv95TasH48fUkVCju5zSuzD2Cf8jaxd3Zc8V8JfsUEmAiumsyTv2wNyjrTZ3TVh3W7oOYXLI7GLb6XQFVQG7TBwnPnD4wf5SvLuRgCUtXVUjYLHt9tQz20AO7tEAxnX3FcmS4r759aiqFjX/xreCmIQ96zTnsF3pMsHgPhnnPCiXHRRWQHPU1vil19LYTciYrjRouuO2IKV9Etx/5Ire3YUXQM81yDfeWfPFEj4s8DRtywYNW9Ditv2MECUJTP07h4DbKpNpJFHfh6etI43YM755949DkFwmN6ZyIvZ32jgclV0ZpPsAvB0VquH8Odc8OpHYOXMBvHXr/Kd2TywTNA88HFgesBhWSbKcKt756cvFbUX/+Eji/DxjJ6DTmS8jl9q+dPvcIAzNcDEcmxTGcwS+qjD6HzoMv0I3+pZ4v3ZzwwDeahfhAqxMr3sqceCqzqS1fG+KTpeXJw+vADnVcCh+oOKPfLf9iQStOheX2c+cBqjEGWuoCVrMY+3+MaQ0NHEjG5UA7M+m9Oj80Jr6ODSSFLi4KM6NZ1yT/vOh4b0klIET0LSVm3HXACvmVc+l7IC2toVNoAsaZ83zQ2O5R2dtwNc/6p8TCOrlfvxnx3MM8R8HDET1csyqnnOAiZi0JToMJkr3F/0N8gFgAb/BJs7onETvCLuv+8SCaTTJD5XdcUno6BrjRho9vcbOnjpKWE6KbsOZu/rYwWkeqeMEzgHryD0MkYLUhqfNHuIKw2zJgP5T0apsKASoJjSLzTd0TFFNkT34MNx7YMEOHF"),
+            SigningSignatureAlgorithm.SHA384_WITH_RSA_ENCRYPTION, Base64.getDecoder().decode("XHDnLzHGds19lU4zdwWILXGOoFEE9h1OCZ3McSJE0osEWkR7v05FCsLTylSx/UdExxgqdychsBP6vlRyrkx5aZM64xletCgMbd+AQn3+nGxkCFSWzo/szv/8fB0OpJ5o1Ks5BpgvONrfRVhjvVCYxH9d1tjNvJYNMsxVYvpkz4Njox0IefOHwJWj9VoL13S/g5h0MBUNPjKlec3evCbZ4n0eesQySY6dQSWL8WhMdnXp9UIU0pEROEhO2Y+iHnjXa1T7FKcdzh/uhHaAipJnufBJ2Q0xpjlV3GPpYMhvk/qL2Rdh71bJKlPDaKCdZEgOglK/++qHmuxMOfMRimGT57QGVcVMcQXf/iBzoSIkucZu4rwPhQdVJpVSpBydO8rVcz1orSi3WCYHcQIMmdn3MSSK3nIxxpx/DLBChVNoVyGrCKLEDktb5ZCRS71RZZBrIW2reMi9l/jQGdZ5YAdQ1hx29LhANtxFPL+8imbBHqbOCkGHGLf+5d9ibmLWPBfnwdoBuN9pb5UH3gdf6/YWp3XObOoY2919ZwtWqBYqY0rum5a6cGuVia+52y8z+GJql/IE49sLispI9B0gm1tWY1mH7YP+6mzxweNBY+O4L49X23YHdNq9uTgYkkmUFu4CQqFDpuzqMh8KabgnZxop4IwXyZSKlAFFiM7GQgLKI9MRM69e/xjMMBjBjzILgusDdnStRs3VcRWW5zpbeUwqnEiV+stZweDSuLJsy4BfAEeYOzVVSu1O94zIKZJJRl+sW9W0lbfdQd0jjKzOXebTLegud+RzU4Agoh4zLa0mGS4pMiNJfye4Lt8po7JCLsqR4RU46UFnyt/R7eTU8Zk01nN8F1O+qyo2FIyU2drOxybhE2YsOdgBiAox04IlR1XmHFenaytFn+6Gn951gZPah+1OrCWiO+z63jzdAfNMkWk5vhaqr81jYKYAYc8d5/TTEd4kkNtK5aaLoiwh7ZAG5nu4Y7dciGt2YJurINdG9la3Z9cJA8DJAkjyrNK9Uz9p"),
+            SigningSignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION, Base64.getDecoder().decode("IgbB+cIDO2jTFuzWWowjN2PZlGm1PFLLSDv2K6eEfnSt1DPHDeKl8nQMituwuNOqh6HpG6TZhmHvOxebxx9FCSNyradw4rYNX/tSDEuIc4dBZQGLHJqDbI+1Yz1mHOEZE1GpJb8LbHF34/1z98s05isTQ8kwiFkzipSL1Qm3G/o6O018yEsCD4YxsDL8YUBdgUzF1T+NhMOppDy5rVge+gblGY2WfFV+Q0i3dPuqllqpa7k31QEBzAzeOPzUQqC78J9Rax9AaR1vKrYS5RR9U9hxCCQUROK6Ead/1igYnDfwd8xXe+RMSel46KQkBrH9tWUw5DpQuzDbyuCw/2HvK68/jZwJjAeAPoiRgE2DLuQJkzTGMDE6JREe/nJ+LpOSEJxX+eyKp4Ia1+J317j/cK+CApdbAK1molV1Cb4N264tT+KZmG24ERDfMDfXKzLVJUF+AIfJbQdbxxUZ51D+NQX03gj6yjVoIQ0rAdFbRarqtW1AAPAqNfcx9hvYTfD52fzPk3IHd2WMcronmTLU21RCnu0V072DXsKBOnQyBmL3UE4udVQBZxOsip3u2y/qGN8fVFzL5J0+xHbDIixHWo7b5QCR+ZZSUZmoVA/SMqumRGVMcUTaRwxPOih32+eXOElZRoGJo80Km8EHJPpo1Fvsw13I9NyHKRudIFDVJz+iJTZRHrVaWAxUdf5qJZI1FknQXX3jUmrcCMFdjAlGpVz2LxCPz7rHJh6oBg4+eWdP4TdnHuG6Hzh4QaAKEvHnmWHNHSKNYYTCzkOpRMVgQd2w9ymkVHgu8K0oBwKcMu43Pb9u/lxWRUgwt3qf6wa336vrE70A17xJZa2fWCncnCIl9ilXKH1FxHrWvhK7rH1YgfLgYQHXcO5PGDEemMiPmzKnGJDhP11BaNEhnI9ogWCr/nahwDL7nBpgYP9SMN3EY6pxZzP9II6fGWA9VNtGJg4fif6pPVUutLV5El+cf04rWChBMis+5cSgKyKNAPBHJFHiASDOEaPG4fpgaiCT")
+    );
 
     private SignatureValueValidator signatureValueValidator;
 
@@ -64,21 +72,54 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validate() throws CertificateException {
+    void validate_rsaSsaPss_ok() throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
         RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
 
-        assertDoesNotThrow(() -> signatureValueValidator.validate(SIGNATURE_VALUE, PAYLOAD, certificate, rsaSsaPssParameters));
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
+                SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
+                PAYLOAD,
+                certificate,
+                rsaSsaPssParameters));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsa_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
+                SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
+                PAYLOAD,
+                certificate,
+                signatureAlgorithm.getAlgorithmName()));
     }
 
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validate_InputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
+    void validate_inputParametersNotProvided_forRsaSsaPss_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
         assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validate(signatureValue, payload, certificate, rsaSsaPssParameters));
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(EmptyInputArgumentProvider.class)
+    void validate_inputParametersNotProvided_forLegacyRsa_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, String signingSignatureAlgorithm) {
+        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validate(signatureValue, payload, certificate, signingSignatureAlgorithm));
+    }
+
     @Test
-    void validateSignatureValue_IsInvalid_throwException() {
+    void validate_legacyRsa_nonLegacyAlgorithmName_throwException() {
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> signatureValueValidator.validate(
+                        SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
+                        PAYLOAD,
+                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
+                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName()));
+        assertTrue(ex.getMessage().contains("not a legacy RSA"));
+    }
+
+    @Test
+    void validate_rsaSsaPss_invalidSignature_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
                         "invalidValue".getBytes(StandardCharsets.UTF_8),
@@ -86,17 +127,6 @@ class SignatureValueValidatorImplTest {
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
                         toRsaSsaPssParameters()));
         assertEquals("Signature value validation failed", ex.getMessage());
-    }
-
-    @Test
-    void validateSignatureValue_constructedPayloadDoesNotMatchTheSignature_throwException() {
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
-                        SIGNATURE_VALUE,
-                        "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        toRsaSsaPssParameters()));
-        assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
     }
 
     @ParameterizedTest
@@ -112,14 +142,26 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validate_legacyRsa_nonLegacyAlgorithmName_throwException() {
+    void validate_rsaSsaPss_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
-                        SIGNATURE_VALUE,
-                        PAYLOAD,
+                        SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
+                        "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName()));
-        assertTrue(ex.getMessage().contains("not a legacy RSA"));
+                        toRsaSsaPssParameters()));
+        assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsa_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException(SigningSignatureAlgorithm signatureAlgorithm) {
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> signatureValueValidator.validate(
+                        SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
+                        "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
+                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
+                        signatureAlgorithm.getAlgorithmName()));
+        assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
     }
 
     private static RsaSsaPssParameters toRsaSsaPssParameters() {
