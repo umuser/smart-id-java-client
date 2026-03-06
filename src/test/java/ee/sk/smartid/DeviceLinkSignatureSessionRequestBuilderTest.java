@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -275,6 +275,27 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource(SigningSignatureAlgorithm.class)
+    void initSignatureSession_withSignatureAlgorithm_ok(SigningSignatureAlgorithm signatureAlgorithm) {
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+
+        toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm))
+                .initSignatureSession();
+
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
+        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(signatureAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        if (signatureAlgorithm.isLegacyRsa()) {
+            assertNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+        } else {
+            assertNotNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+            assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
+        }
     }
 
     @Test
