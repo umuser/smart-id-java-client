@@ -764,6 +764,21 @@ public class ReadmeIntegrationTest {
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            if (signatureAlgorithm.isLegacyRsa()) {
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        signatureResponse.getCertificate(),
+                        signatureAlgorithm.getAlgorithmName());
+            } else {
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        signatureResponse.getCertificate(),
+                        signatureResponse.getRsaSsaPssParameters());
+            }
+
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
@@ -829,6 +844,21 @@ public class ReadmeIntegrationTest {
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
+
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            if (signatureAlgorithm.isLegacyRsa()) {
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        signatureResponse.getCertificate(),
+                        signatureAlgorithm.getAlgorithmName());
+            } else {
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        signatureResponse.getCertificate(),
+                        signatureResponse.getRsaSsaPssParameters());
+            }
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals(documentNumber, signatureResponse.getDocumentNumber());
