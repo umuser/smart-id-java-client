@@ -37,6 +37,8 @@ import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashAlgorithm;
@@ -308,6 +310,48 @@ class SmartIdRestIntegrationTest {
                 assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
                 assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.vc().value()).matches());
                 assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().type());
+            }
+
+            @ParameterizedTest
+            @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+            void initNotificationSignature_withPkcs15Algorithm_andSemanticIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
+                var request = toSignatureSessionRequestWithPkcs15(signatureAlgorithm);
+
+                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
+
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.vc().value()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().type());
+            }
+
+            @ParameterizedTest
+            @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+            void initNotificationSignature_withPkcs15Algorithm_andDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
+                var request = toSignatureSessionRequestWithPkcs15(signatureAlgorithm);
+
+                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, DOCUMENT_NUMBER);
+
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.vc().value()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().type());
+            }
+
+            private static NotificationSignatureSessionRequest toSignatureSessionRequestWithPkcs15(SigningSignatureAlgorithm signatureAlgorithm) {
+                byte[] digest = DigestCalculator.calculateDigest("test".getBytes(), signatureAlgorithm.getHashAlgorithmForLegacy());
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                        Base64.toBase64String(digest),
+                        signatureAlgorithm.getAlgorithmName(),
+                        null);
+                return new NotificationSignatureSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        "QUALIFIED",
+                        SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                        signatureProtocolParameters,
+                        null,
+                        null,
+                        InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Sign it!", null))),
+                        null
+                );
             }
 
             private static NotificationSignatureSessionRequest toSignatureSessionRequest() {
