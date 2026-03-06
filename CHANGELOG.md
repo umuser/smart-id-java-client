@@ -3,7 +3,25 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.1-?] - TBD
+## [3.2] - TBD
+
+### Added
+
+- Legacy signing algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) for RSASSA-PKCS#1 v1.5.
+  - Compatible with DigiDoc4j library which does not support RSASSA-PSS.
+  - Use `SigningSignatureAlgorithm` enum and `withSignatureAlgorithm()` on signature session builders.
+  - Use `SigningSignatureAlgorithm.getHashAlgorithmForLegacy()` when creating `SignableData` for legacy algorithms.
+  - Legacy algorithms do not use `signatureAlgorithmParameters` in requests or responses.
+- `AuthenticationSignatureAlgorithm` and `SigningSignatureAlgorithm` enums for type-safe signature algorithm selection.
+  - Default `AuthenticationSignatureAlgorithm` is `RSASSA_PSS`; default `SigningSignatureAlgorithm` is `RSASSA_PSS`.
+- `withSignatureAlgorithm()` and `withHashAlgorithm()` on authentication and signature session builders.
+- `SignatureValueValidator.validate(..., String signatureAlgorithmName)` overload for validating legacy RSA signatures.
+
+### Changed
+
+- Split `SignatureAlgorithm` into `AuthenticationSignatureAlgorithm` (authentication) and `SigningSignatureAlgorithm` (signing).
+
+## [3.1] - 2025-10-15
 
 ### Structural changes
 
