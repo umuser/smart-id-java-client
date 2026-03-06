@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  *
  * @param digest                       Required. The digest to be signed, Base64 encoded.
  * @param signatureAlgorithm           Required. The signature algorithm (e.g. rsassa-pss, sha512WithRSAEncryption).
- * @param signatureAlgorithmParameters Required for RSASSA-PSS. Omitted for RSASSA-PKCS#1 v1.5 algorithms; must be null in that case so it is not serialized.
+ * @param signatureAlgorithmParameters Required for RSASSA-PSS. Omitted for RSASSA-PKCS#1 v1.5 algorithms.
  */
 public record RawDigestSignatureProtocolParameters(String digest,
                                                    String signatureAlgorithm,
