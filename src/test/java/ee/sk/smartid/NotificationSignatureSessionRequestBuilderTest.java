@@ -229,7 +229,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
-        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.signatureProtocolParameters().digest());
+        assertEquals(signableData.getDigestInBase64(), capturedRequest.signatureProtocolParameters().digest());
         assertEquals(hashAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
     }
