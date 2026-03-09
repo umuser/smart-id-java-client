@@ -149,7 +149,7 @@ public class NotificationAuthenticationResponseValidator {
                                    String schemaName,
                                    String brokeredRpName) {
         byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
-        signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
+        signatureValueValidator.validateRsaSsaPss(authenticationResponse.getSignatureValue(),
                 payload,
                 authenticationResponse.getCertificate(),
                 authenticationResponse.getRsaSsaPssSignatureParameters());

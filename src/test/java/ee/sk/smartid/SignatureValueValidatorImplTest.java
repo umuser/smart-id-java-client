@@ -72,11 +72,11 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validate_rsaSsaPss_ok() throws CertificateException {
+    void validateRsaSsaPss_ok() throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
         RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
 
-        assertDoesNotThrow(() -> signatureValueValidator.validate(
+        assertDoesNotThrow(() -> signatureValueValidator.validateRsaSsaPss(
                 SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                 PAYLOAD,
                 certificate,
@@ -85,10 +85,10 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+    void validateLegacyRsa_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
 
-        assertDoesNotThrow(() -> signatureValueValidator.validate(
+        assertDoesNotThrow(() -> signatureValueValidator.validateLegacyRsa(
                 SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                 PAYLOAD,
                 certificate,
@@ -97,20 +97,20 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validate_inputParametersNotProvided_forRsaSsaPss_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
-        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validate(signatureValue, payload, certificate, rsaSsaPssParameters));
+    void validateRsaSsaPss_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
+        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validateRsaSsaPss(signatureValue, payload, certificate, rsaSsaPssParameters));
     }
 
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validate_inputParametersNotProvided_forLegacyRsa_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, String signingSignatureAlgorithm) {
-        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validate(signatureValue, payload, certificate, signingSignatureAlgorithm));
+    void validateLegacyRsa_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, String signingSignatureAlgorithm) {
+        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validateLegacyRsa(signatureValue, payload, certificate, signingSignatureAlgorithm));
     }
 
     @Test
-    void validate_legacyRsa_nonLegacyAlgorithmName_throwException() {
+    void validateLegacyRsa_nonLegacyAlgorithmName_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
+                () -> signatureValueValidator.validateLegacyRsa(
                         SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
@@ -119,9 +119,9 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validate_rsaSsaPss_invalidSignature_throwException() {
+    void validateRsaSsaPss_invalidSignature_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
+                () -> signatureValueValidator.validateRsaSsaPss(
                         "invalidValue".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
@@ -131,9 +131,9 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) {
+    void validateLegacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
+                () -> signatureValueValidator.validateLegacyRsa(
                         "invalidSignature".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
@@ -142,9 +142,9 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validate_rsaSsaPss_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException() {
+    void validateRsaSsaPss_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
+                () -> signatureValueValidator.validateRsaSsaPss(
                         SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
@@ -154,14 +154,67 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException(SigningSignatureAlgorithm signatureAlgorithm) {
+    void validateLegacyRsa_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException(SigningSignatureAlgorithm signatureAlgorithm) {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validate(
+                () -> signatureValueValidator.validateLegacyRsa(
                         SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
                         signatureAlgorithm.getAlgorithmName()));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
+    }
+
+    @Test
+    void validate_dispatchesToRsaSsaPss_whenAlgorithmIsRsassaPss() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
+
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
+                SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
+                PAYLOAD,
+                certificate,
+                SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                rsaSsaPssParameters));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_dispatchesToLegacyRsa_whenAlgorithmIsLegacy(SigningSignatureAlgorithm algorithm) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
+                SIGNATURE_VALUE_MAP.get(algorithm),
+                PAYLOAD,
+                certificate,
+                algorithm.getAlgorithmName(),
+                null));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsa_withRsaSsaPssParametersProvided_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+
+        assertThrows(SmartIdClientException.class,
+                () -> signatureValueValidator.validate(
+                        SIGNATURE_VALUE_MAP.get(algorithm),
+                        PAYLOAD,
+                        certificate,
+                        algorithm.getAlgorithmName(),
+                        toRsaSsaPssParameters()));
+    }
+
+    @Test
+    void validate_rsassaPss_withoutRsaSsaPssParameters_throwException() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+
+        assertThrows(SmartIdClientException.class,
+                () -> signatureValueValidator.validate(
+                        SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
+                        PAYLOAD,
+                        certificate,
+                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        null));
     }
 
     private static RsaSsaPssParameters toRsaSsaPssParameters() {

@@ -49,10 +49,10 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
     private final Logger logger = LoggerFactory.getLogger(SignatureValueValidatorImpl.class);
 
     @Override
-    public void validate(byte[] signatureValue,
-                         byte[] payload,
-                         X509Certificate certificate,
-                         RsaSsaPssParameters rsaSsaPssParameters) {
+    public void validateRsaSsaPss(byte[] signatureValue,
+                                  byte[] payload,
+                                  X509Certificate certificate,
+                                  RsaSsaPssParameters rsaSsaPssParameters) {
         validateCommonInput(signatureValue, payload, certificate);
         if (rsaSsaPssParameters == null) {
             throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' is not provided");
@@ -70,10 +70,10 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
     }
 
     @Override
-    public void validate(byte[] signatureValue,
-                         byte[] payload,
-                         X509Certificate certificate,
-                         String signatureAlgorithmName) {
+    public void validateLegacyRsa(byte[] signatureValue,
+                                  byte[] payload,
+                                  X509Certificate certificate,
+                                  String signatureAlgorithmName) {
         validateCommonInput(signatureValue, payload, certificate);
         if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
@@ -92,6 +92,35 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
             }
         } catch (GeneralSecurityException ex) {
             throw new UnprocessableSmartIdResponseException("Signature value validation failed", ex);
+        }
+    }
+
+    @Override
+    public void validate(byte[] signatureValue,
+                         byte[] payload,
+                         X509Certificate certificate,
+                         String signatureAlgorithmName,
+                         RsaSsaPssParameters rsaSsaPssParameters) {
+        if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
+            throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
+        }
+        SigningSignatureAlgorithm algorithm;
+        try {
+            algorithm = SigningSignatureAlgorithm.fromString(signatureAlgorithmName);
+        } catch (IllegalArgumentException ex) {
+            throw new UnprocessableSmartIdResponseException("Unsupported signature algorithm: " + signatureAlgorithmName, ex);
+        }
+
+        if (algorithm.isLegacyRsa()) {
+            if (rsaSsaPssParameters != null) {
+                throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' is not allowed for legacy RSA algorithms");
+            }
+            validateLegacyRsa(signatureValue, payload, certificate, signatureAlgorithmName);
+        } else {
+            if (rsaSsaPssParameters == null) {
+                throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' must be provided for RSASSA-PSS algorithm");
+            }
+            validateRsaSsaPss(signatureValue, payload, certificate, rsaSsaPssParameters);
         }
     }
 

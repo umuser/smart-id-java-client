@@ -36,31 +36,53 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 public interface SignatureValueValidator {
 
     /**
-     * Validates the signature value (RSASSA-PSS) against the calculated signature value.
-     *
-     * @param signatureValue      the signature value to validate
-     * @param payload             the original data that was signed
-     * @param certificate         X509 certificate used for signature validation
-     * @param rsaSsaPssParameters  signature parameters used for creating signature value
-     * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
-     */
-    void validate(byte[] signatureValue,
-                  byte[] payload,
-                  X509Certificate certificate,
-                  RsaSsaPssParameters rsaSsaPssParameters);
-
-    /**
-     * Validates the signature value (RSASSA-PKCS#1 v1.5) against the digest/payload.
-     * Use this when the signature session used a legacy RSA algorithm (e.g. sha256WithRSAEncryption).
+     * Validates the signature value for RSASSA-PSS (authentication and signing).
      *
      * @param signatureValue       the signature value to validate
-     * @param payload              the digest or data that was signed (typically the hash that was sent to Smart-ID)
-     * @param certificate          X509 certificate used for signature validation
-     * @param signatureAlgorithmName Smart-ID API algorithm name (e.g. sha512WithRSAEncryption)
-     * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
+     * @param payload              the original data that was signed (typically the hash that was sent to Smart-ID)
+     * @param certificate          X.509 certificate used for signature validation
+     * @param rsaSsaPssParameters  signature parameters used for creating the signature value
+     * @throws UnprocessableSmartIdResponseException when there is any issue with validating the signature value
+     */
+    void validateRsaSsaPss(byte[] signatureValue,
+                           byte[] payload,
+                           X509Certificate certificate,
+                           RsaSsaPssParameters rsaSsaPssParameters);
+
+    /**
+     * Validates the signature value for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
+     * Use this when the signature session used a legacy RSA algorithm (e.g. {@code sha256WithRSAEncryption}).
+     *
+     * @param signatureValue        the signature value to validate
+     * @param payload               the digest or data that was signed (typically the hash that was sent to Smart-ID)
+     * @param certificate           X.509 certificate used for signature validation
+     * @param signatureAlgorithmName Smart-ID API algorithm name (e.g. {@code sha512WithRSAEncryption})
+     * @throws UnprocessableSmartIdResponseException when there is any issue with validating the signature value
+     */
+    void validateLegacyRsa(byte[] signatureValue,
+                           byte[] payload,
+                           X509Certificate certificate,
+                           String signatureAlgorithmName);
+
+    /**
+     * Validates the signature value for both RSASSA-PSS and legacy RSASSA-PKCS#1 v1.5 algorithms.
+     * <ul>
+     *     <li>For RSASSA-PSS ({@link SigningSignatureAlgorithm#RSASSA_PSS}) the {@code rsaSsaPssParameters}
+     *     parameter <b>must</b> be provided.</li>
+     *     <li>For legacy RSA algorithms (e.g. {@code sha256WithRSAEncryption}) the {@code rsaSsaPssParameters}
+     *     parameter <b>must be {@code null}</b>.</li>
+     * </ul>
+     *
+     * @param signatureValue        the signature value to validate
+     * @param payload               the data used when calculating the signature (hash or raw bytes, depending on the algorithm)
+     * @param certificate           X.509 certificate used for signature validation
+     * @param signatureAlgorithmName Smart-ID API algorithm name
+     * @param rsaSsaPssParameters   RSASSA-PSS parameters; required only for RSASSA-PSS and must be {@code null} for legacy RSA
+     * @throws UnprocessableSmartIdResponseException when there is any issue with validating the signature value
      */
     void validate(byte[] signatureValue,
                   byte[] payload,
                   X509Certificate certificate,
-                  String signatureAlgorithmName);
+                  String signatureAlgorithmName,
+                  RsaSsaPssParameters rsaSsaPssParameters);
 }
