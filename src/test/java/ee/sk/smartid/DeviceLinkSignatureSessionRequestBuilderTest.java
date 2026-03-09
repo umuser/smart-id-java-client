@@ -66,6 +66,11 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.signature.DigestCalculator;
+import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class DeviceLinkSignatureSessionRequestBuilderTest {
 

@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
@@ -47,6 +47,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import ee.sk.smartid.CertificateUtil;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 

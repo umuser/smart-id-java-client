@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L

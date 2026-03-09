@@ -4,7 +4,7 @@ package ee.sk.smartid.util;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,11 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.DigestCalculator;
-import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.common.SmartIdInteraction;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.signature.DigestCalculator;
+import ee.sk.smartid.signature.HashAlgorithm;
 
 /**
  * Utility for interactions related actions

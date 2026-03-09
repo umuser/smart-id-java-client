@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,7 @@ import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.HashAlgorithm;
 
 class AuthenticationResponseMapperImplTest {
 

@@ -70,6 +70,8 @@ import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.HashAlgorithm;
 
 class DeviceLinkAuthenticationSessionRequestBuilderTest {
 

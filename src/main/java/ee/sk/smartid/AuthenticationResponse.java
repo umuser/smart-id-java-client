@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.signature.RsaSsaPssParameters;
 
 /**
  * The authentication response after a successful authentication session status response was received.

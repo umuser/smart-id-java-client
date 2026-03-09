@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import ee.sk.smartid.signature.DigestInput;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

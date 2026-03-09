@@ -22,7 +22,7 @@ Changes needed in signing flows:
     * when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `SignatureValueValidator.validateLegacyRsa`
     * when both RSASSA_PSS and legacy RSA algorithms are used then use `SignatureValueValidator.validate`
 
-When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
+When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.signature.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
 ```
 return switch (signatureAlgorithm) {
     case SHA256_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA256;
@@ -30,6 +30,20 @@ return switch (signatureAlgorithm) {
     case SHA512_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA512;
 }
 ```
+
+The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature` so when used then imports need to be adjusted:
+* `AuthenticationSignatureAlgorithm`
+* `DigestCalculator`
+* `DigestInput`
+* `HashAlgorithm`
+* `MaskGenAlgorithm`
+* `RsaSsaPssParameters`
+* `SignableData`
+* `SignableHash`
+* `SignatureValueValidator`
+* `SignatureValueValidatorImpl`
+* `SigningSignatureAlgorithm`
+* `TrailerField`
 
 # Migrating from Smart-ID v2 to Smart-ID v3 API
 

@@ -56,6 +56,11 @@ import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.signature.DigestCalculator;
+import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class LinkedNotificationSignatureSessionRequestBuilderTest {
 

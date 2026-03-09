@@ -18,6 +18,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Introduced `validateRsaSsaPss(...)` and `validateLegacyRsa(...)` helper methods.
   - Added unified 5-parameter `validate(signatureValue, payload, certificate, signatureAlgorithmName, rsaSsaPssParameters)`.
     - Enforced that `rsaSsaPssParameters` **must** be present for `RSASSA_PSS` and **must be null** for legacy RSA algorithms.
+- The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature`:
+  - `AuthenticationSignatureAlgorithm`
+  - `DigestCalculator`
+  - `DigestInput`
+  - `HashAlgorithm`
+  - `MaskGenAlgorithm`
+  - `RsaSsaPssParameters`
+  - `SignableData`
+  - `SignableHash`
+  - `SignatureValueValidator`
+  - `SignatureValueValidatorImpl`
+  - `SigningSignatureAlgorithm`
+  - `TrailerField`
 
 ## [3.1] - 2025-10-15
 

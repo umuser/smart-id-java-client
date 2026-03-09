@@ -42,6 +42,8 @@ import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.HashAlgorithm;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;

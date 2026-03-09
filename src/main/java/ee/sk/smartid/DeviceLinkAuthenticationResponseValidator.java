@@ -37,6 +37,10 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.DigestCalculator;
+import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.SignatureValueValidator;
+import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 

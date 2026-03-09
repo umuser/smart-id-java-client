@@ -40,11 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import ee.sk.smartid.DigestCalculator;
-import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.RpChallengeGenerator;
-import ee.sk.smartid.AuthenticationSignatureAlgorithm;
-import ee.sk.smartid.SigningSignatureAlgorithm;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.VerificationCodeType;
@@ -67,6 +63,10 @@ import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.DigestCalculator;
+import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import ee.sk.smartid.util.InteractionUtil;
 
 @SmartIdDemoIntegrationTest

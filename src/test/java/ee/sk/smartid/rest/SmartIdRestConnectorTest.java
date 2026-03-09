@@ -57,7 +57,6 @@ import org.junit.jupiter.api.Test;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.CertificateLevel;
-import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteractionType;
@@ -94,6 +93,7 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.signature.HashAlgorithm;
 import ee.sk.smartid.util.InteractionUtil;
 
 class SmartIdRestConnectorTest {

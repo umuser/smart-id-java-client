@@ -31,6 +31,8 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.signature.RsaSsaPssParameters;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 /**
  * Response of a completed and validated signature session.
