@@ -14,10 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Legacy algorithms do not use `signatureAlgorithmParameters` in requests or responses.
 - Split `SignatureAlgorithm` into `AuthenticationSignatureAlgorithm` (authentication) and `SigningSignatureAlgorithm` (signing).
   - Only allowed `AuthenticationSignatureAlgorithm` is `RSASSA_PSS`; default `SigningSignatureAlgorithm` is `RSASSA_PSS`.
-- Refactored `SignatureValueValidator`:
-  - Introduced `validateRsaSsaPss(...)` and `validateLegacyRsa(...)` helper methods.
-  - Added unified 5-parameter `validate(signatureValue, payload, certificate, signatureAlgorithmName, rsaSsaPssParameters)`.
-    - Enforced that `rsaSsaPssParameters` **must** be present for `RSASSA_PSS` and **must be null** for legacy RSA algorithms.
+- Added `SignatureFactory` interface for creating `java.security.Signature` instance for verifying signature and added its implementations:
+  - `RsaSsaPssSignatureFactory`
+  - `Pkcs15SignatureFactory`
+- Changed `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `SignatureFactory`:
 - The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature`:
   - `AuthenticationSignatureAlgorithm`
   - `DigestCalculator`

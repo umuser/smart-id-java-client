@@ -39,6 +39,7 @@ import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.signature.DigestCalculator;
 import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
 import ee.sk.smartid.signature.SignatureValueValidator;
 import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.InteractionUtil;
@@ -160,10 +161,10 @@ public class DeviceLinkAuthenticationResponseValidator {
                                    String schemaName,
                                    String brokeredRpName) {
         byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
-        signatureValueValidator.validateRsaSsaPss(authenticationResponse.getSignatureValue(),
+        signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
                 payload,
                 authenticationResponse.getCertificate(),
-                authenticationResponse.getRsaSsaPssSignatureParameters());
+                new RsaSsaPssSignatureFactory(authenticationResponse.getRsaSsaPssSignatureParameters()));
     }
 
     private byte[] constructPayload(AuthenticationResponse authenticationResponse,

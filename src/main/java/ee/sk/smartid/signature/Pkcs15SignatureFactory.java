@@ -26,44 +26,42 @@ package ee.sk.smartid.signature;
  * #L%
  */
 
-import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
-import java.security.cert.X509Certificate;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**
- * Implementation of {@link SignatureValueValidator} that validates signature values
- * for both RSASSA-PSS (authentication and signing) and RSASSA-PKCS#1 v1.5 (signing only).
+ * {@link SignatureFactory} implementation for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
  */
-public final class SignatureValueValidatorImpl implements SignatureValueValidator {
+public final class Pkcs15SignatureFactory implements SignatureFactory {
+
+    private final SigningSignatureAlgorithm signingSignatureAlgorithm;
+
+    /**
+     * Creates a factory for legacy RSA (RSASSA-PKCS#1 v1.5) signature verification.
+     *
+     * @param signingSignatureAlgorithm the signature algorithm; must not be null and must be a legacy RSA algorithm
+     * @throws SmartIdClientException                if {@code signingSignatureAlgorithm} is null
+     * @throws UnprocessableSmartIdResponseException if the algorithm is not a legacy RSA algorithm
+     */
+    public Pkcs15SignatureFactory(SigningSignatureAlgorithm signingSignatureAlgorithm) {
+        if (signingSignatureAlgorithm == null) {
+            throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
+        }
+        if (!signingSignatureAlgorithm.isLegacyRsa()) {
+            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signingSignatureAlgorithm +
+                    "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
+        }
+        this.signingSignatureAlgorithm = signingSignatureAlgorithm;
+    }
 
     @Override
-    public void validate(byte[] signatureValue,
-                         byte[] payload,
-                         X509Certificate certificate,
-                         SignatureFactory signatureFactory) {
-        if (signatureValue == null) {
-            throw new SmartIdClientException("Parameter 'signatureValue' is not provided");
-        }
-        if (payload == null) {
-            throw new SmartIdClientException("Parameter 'payload' is not provided");
-        }
-        if (certificate == null) {
-            throw new SmartIdClientException("Parameter 'certificate' is not provided");
-        }
-        if (signatureFactory == null) {
-            throw new SmartIdClientException("Parameter 'signatureFactory' is not provided");
-        }
+    public Signature getSignature() {
         try {
-            Signature signature = signatureFactory.getSignature();
-            signature.initVerify(certificate.getPublicKey());
-            signature.update(payload);
-            if (!signature.verify(signatureValue)) {
-                throw new UnprocessableSmartIdResponseException("Provided signature value does not match the calculated signature value");
-            }
-        } catch (GeneralSecurityException ex) {
+            return Signature.getInstance(signingSignatureAlgorithm.getJceAlgorithmName());
+        } catch (NoSuchAlgorithmException ex) {
             throw new UnprocessableSmartIdResponseException("Signature value validation failed", ex);
         }
     }

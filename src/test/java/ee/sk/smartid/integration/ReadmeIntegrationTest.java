@@ -96,7 +96,10 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.signature.HashAlgorithm;
+import ee.sk.smartid.signature.Pkcs15SignatureFactory;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
 import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignatureFactory;
 import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import ee.sk.smartid.signature.SignatureValueValidator;
 import ee.sk.smartid.signature.SignatureValueValidatorImpl;
@@ -435,12 +438,14 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
                 signatureValueValidator.validate(
                         signatureResponse.getSignatureValue(),
                         signableData.dataToSign(),
                         certResponse.certificate(),
-                        signatureResponse.getSignatureAlgorithm(),
-                        signatureResponse.getRsaSsaPssParameters());
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -542,12 +547,14 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
                 signatureValueValidator.validate(
                         signatureResponse.getSignatureValue(),
                         signableData.dataToSign(),
                         certificateChoiceResponse.getCertificate(),
-                        signatureResponse.getSignatureAlgorithm(),
-                        signatureResponse.getRsaSsaPssParameters());
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -772,12 +779,14 @@ public class ReadmeIntegrationTest {
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
             SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new Pkcs15SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
             signatureValueValidator.validate(
                     signatureResponse.getSignatureValue(),
                     signableData.dataToSign(),
                     signatureResponse.getCertificate(),
-                    signatureAlgorithm,
-                    signatureResponse.getRsaSsaPssParameters());
+                    signatureFactory);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
@@ -846,12 +855,14 @@ public class ReadmeIntegrationTest {
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
             SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new Pkcs15SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
             signatureValueValidator.validate(
                     signatureResponse.getSignatureValue(),
                     signableData.dataToSign(),
                     signatureResponse.getCertificate(),
-                    signatureAlgorithm,
-                    signatureResponse.getRsaSsaPssParameters());
+                    signatureFactory);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals(documentNumber, signatureResponse.getDocumentNumber());

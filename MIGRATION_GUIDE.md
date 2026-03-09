@@ -8,19 +8,24 @@ Some classes could also be used in v3 and for those classes the package did not 
 
 For signing flows are restored legacy RSASSA-PKCS#1 v1.5 algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) which are compatible with DigiDoc4j's signing support.
 For that reason:
-* `SignatureAlgorithm` class is split into `AuthenticationSignatureAlgorithm` and `SigningSignatureAlgorithm`.
-* `SignatureValueValidator` has now 3 methods `validate`, `validateRsaSsaPss` and `validateLegacyRsa` for different use cases instead previous 1 method `validate`
+- `SignatureAlgorithm` class is split into `AuthenticationSignatureAlgorithm` and `SigningSignatureAlgorithm`.
+- `SignatureValueValidator.validate` last parameter changed from `RsaSsaPssParameters` to `SignatureFactory`
 
 Changes needed in authentication flows:
-* change `SignatureAlgorithm` to `AuthenticationSignatureAlgorithm`
-* change used `SignatureValueValidator` method from `validate` to `validateRsaSsaPss` (only name changed, parameters unchanged)
+- change `SignatureAlgorithm` to `AuthenticationSignatureAlgorithm`
+- change `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
 
 Changes needed in signing flows:
-* change `SignatureAlgorithm` to `SigningSignatureAlgorithm`
-* suggestion for `SignatureValueValidator` usage:
-    * when using only signature algorithm RSASSA_PSS then use `SignatureValueValidator.validateRsaSsaPss`
-    * when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `SignatureValueValidator.validateLegacyRsa`
-    * when both RSASSA_PSS and legacy RSA algorithms are used then use `SignatureValueValidator.validate`
+- change `SignatureAlgorithm` to `SigningSignatureAlgorithm`
+- suggestion for `SignatureValueValidator.validate` last parameter changes:
+  - when using only signature algorithm RSASSA_PSS then use `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
+  - when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `new Pkcs15SignatureFactory(SigningSignatureAlgorithm)`
+  - when both RSASSA_PSS and legacy RSA algorithms are used then possible solution is:
+    ```
+    SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+            ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+            : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+    ```
 
 When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.signature.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
 ```

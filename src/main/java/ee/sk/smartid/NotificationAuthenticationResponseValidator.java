@@ -36,6 +36,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
 import ee.sk.smartid.signature.SignatureValueValidator;
 import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.InteractionUtil;
@@ -151,10 +152,10 @@ public class NotificationAuthenticationResponseValidator {
                                    String schemaName,
                                    String brokeredRpName) {
         byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
-        signatureValueValidator.validateRsaSsaPss(authenticationResponse.getSignatureValue(),
+        signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
                 payload,
                 authenticationResponse.getCertificate(),
-                authenticationResponse.getRsaSsaPssSignatureParameters());
+                new RsaSsaPssSignatureFactory(authenticationResponse.getRsaSsaPssSignatureParameters()));
     }
 
     private byte[] constructPayload(AuthenticationResponse authenticationResponse,

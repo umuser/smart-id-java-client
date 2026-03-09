@@ -26,31 +26,27 @@ package ee.sk.smartid.signature;
  * #L%
  */
 
-import java.security.cert.X509Certificate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-/**
- * Interface for signature value validator.
- * <p>
- * Use a concrete {@link SignatureFactory} implementation to specify the signature algorithm and parameters:
- * {@link RsaSsaPssSignatureFactory} for RSASSA-PSS (authentication and signing), or
- * {@link Pkcs15SignatureFactory} for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
- * The factory encapsulates algorithm choice and parameter validation.
- */
-public interface SignatureValueValidator {
+class Pkcs15SignatureFactoryTest {
 
-    /**
-     * Validates the signature value using the provided signature factory.
-     *
-     * @param signatureValue   the signature value to validate
-     * @param payload          the original data that was signed (typically the hash that was sent to Smart-ID)
-     * @param certificate      X.509 certificate used for signature validation
-     * @param signatureFactory factory that creates the {@link java.security.Signature} instance for verification
-     * @throws UnprocessableSmartIdResponseException when there is any issue with validating the signature value
-     */
-    void validate(byte[] signatureValue,
-                  byte[] payload,
-                  X509Certificate certificate,
-                  SignatureFactory signatureFactory);
+    @Test
+    void constructor_nullAlgorithm_throwException() {
+        var ex = assertThrows(SmartIdClientException.class, () -> new Pkcs15SignatureFactory(null));
+        assertEquals("Parameter 'signatureAlgorithmName' is not provided", ex.getMessage());
+    }
+
+    @Test
+    void constructor_nonLegacyAlgorithm_throwException() {
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> new Pkcs15SignatureFactory(SigningSignatureAlgorithm.RSASSA_PSS));
+        assertTrue(ex.getMessage().contains("not a legacy RSA"));
+    }
 }

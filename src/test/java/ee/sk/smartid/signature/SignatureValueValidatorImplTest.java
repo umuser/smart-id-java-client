@@ -29,7 +29,6 @@ package ee.sk.smartid.signature;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
@@ -73,149 +72,93 @@ class SignatureValueValidatorImplTest {
     }
 
     @Test
-    void validateRsaSsaPss_ok() throws CertificateException {
+    void validate_withRsaSsaPssSignatureFactory_ok() throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-        RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
+        SignatureFactory factory = new RsaSsaPssSignatureFactory(toRsaSsaPssParameters());
 
-        assertDoesNotThrow(() -> signatureValueValidator.validateRsaSsaPss(
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
                 SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                 PAYLOAD,
                 certificate,
-                rsaSsaPssParameters));
+                factory));
     }
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validateLegacyRsa_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+    void validate_withPkcs15SignatureFactory_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        SignatureFactory factory = new Pkcs15SignatureFactory(signatureAlgorithm);
 
-        assertDoesNotThrow(() -> signatureValueValidator.validateLegacyRsa(
+        assertDoesNotThrow(() -> signatureValueValidator.validate(
                 SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                 PAYLOAD,
                 certificate,
-                signatureAlgorithm));
+                factory));
     }
 
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validateRsaSsaPss_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
-        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validateRsaSsaPss(signatureValue, payload, certificate, rsaSsaPssParameters));
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validateLegacyRsa_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, SigningSignatureAlgorithm signingSignatureAlgorithm) {
-        assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validateLegacyRsa(signatureValue, payload, certificate, signingSignatureAlgorithm));
+    void validate_inputNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, SignatureFactory signatureFactory, String errorParameter) {
+        var ex = assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validate(signatureValue, payload, certificate, signatureFactory));
+        assertEquals("Parameter '" + errorParameter + "' is not provided", ex.getMessage());
     }
 
     @Test
-    void validateLegacyRsa_nonLegacyAlgorithmName_throwException() {
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validateLegacyRsa(
-                        SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
-                        PAYLOAD,
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        SigningSignatureAlgorithm.RSASSA_PSS));
-        assertTrue(ex.getMessage().contains("not a legacy RSA"));
-    }
+    void validate_withRsaSsaPssSignatureFactory_invalidSignature_throwException() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        SignatureFactory factory = new RsaSsaPssSignatureFactory(toRsaSsaPssParameters());
 
-    @Test
-    void validateRsaSsaPss_invalidSignature_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validateRsaSsaPss(
+                () -> signatureValueValidator.validate(
                         "invalidValue".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        toRsaSsaPssParameters()));
+                        certificate,
+                        factory));
         assertEquals("Signature value validation failed", ex.getMessage());
     }
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validateLegacyRsa_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) {
+    void validate_withPkcs15SignatureFactory_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        SignatureFactory factory = new Pkcs15SignatureFactory(algorithm);
+
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validateLegacyRsa(
+                () -> signatureValueValidator.validate(
                         "invalidSignature".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        algorithm));
+                        certificate,
+                        factory));
         assertEquals("Signature value validation failed", ex.getMessage());
     }
 
     @Test
-    void validateRsaSsaPss_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException() {
+    void validate_withRsaSsaPssSignatureFactory_payloadDoesNotMatch_throwException() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        SignatureFactory factory = new RsaSsaPssSignatureFactory(toRsaSsaPssParameters());
+
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validateRsaSsaPss(
+                () -> signatureValueValidator.validate(
                         SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        toRsaSsaPssParameters()));
+                        certificate,
+                        factory));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
     }
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validateLegacyRsa_signatureValue_constructedPayloadDoesNotMatchTheSignature_throwException(SigningSignatureAlgorithm signatureAlgorithm) {
+    void validate_withPkcs15SignatureFactory_payloadDoesNotMatch_throwException(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
+        SignatureFactory factory = new Pkcs15SignatureFactory(signatureAlgorithm);
+
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> signatureValueValidator.validateLegacyRsa(
+                () -> signatureValueValidator.validate(
                         SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
-                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        signatureAlgorithm));
+                        certificate,
+                        factory));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
-    }
-
-    @Test
-    void validate_dispatchesToRsaSsaPss_whenAlgorithmIsRsassaPss() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-        RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
-
-        assertDoesNotThrow(() -> signatureValueValidator.validate(
-                SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
-                PAYLOAD,
-                certificate,
-                SigningSignatureAlgorithm.RSASSA_PSS,
-                rsaSsaPssParameters));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_dispatchesToLegacyRsa_whenAlgorithmIsLegacy(SigningSignatureAlgorithm algorithm) throws CertificateException {
-        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-
-        assertDoesNotThrow(() -> signatureValueValidator.validate(
-                SIGNATURE_VALUE_MAP.get(algorithm),
-                PAYLOAD,
-                certificate,
-                algorithm,
-                null));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_legacyRsa_withRsaSsaPssParametersProvided_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
-        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-
-        assertThrows(SmartIdClientException.class,
-                () -> signatureValueValidator.validate(
-                        SIGNATURE_VALUE_MAP.get(algorithm),
-                        PAYLOAD,
-                        certificate,
-                        algorithm,
-                        toRsaSsaPssParameters()));
-    }
-
-    @Test
-    void validate_rsassaPss_withoutRsaSsaPssParameters_throwException() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-
-        assertThrows(SmartIdClientException.class,
-                () -> signatureValueValidator.validate(
-                        SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
-                        PAYLOAD,
-                        certificate,
-                        SigningSignatureAlgorithm.RSASSA_PSS,
-                        null));
     }
 
     private static RsaSsaPssParameters toRsaSsaPssParameters() {
@@ -232,10 +175,10 @@ class SignatureValueValidatorImplTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws CertificateException {
             return Stream.of(
-                    Arguments.of(null, null, null, null),
-                    Arguments.of(new byte[0], null, null, null),
-                    Arguments.of(new byte[0], new byte[0], null, null),
-                    Arguments.of(new byte[0], new byte[0], CertificateUtil.toX509CertificateFromEncodedString(CERT), null)
+                    Arguments.of(null, null, null, null, "signatureValue"),
+                    Arguments.of(new byte[0], null, null, null, "payload"),
+                    Arguments.of(new byte[0], new byte[0], null, null, "certificate"),
+                    Arguments.of(new byte[0], new byte[0], CertificateUtil.toX509CertificateFromEncodedString(CERT), null, "signatureFactory")
             );
         }
     }
