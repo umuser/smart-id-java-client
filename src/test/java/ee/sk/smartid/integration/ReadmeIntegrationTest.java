@@ -439,7 +439,7 @@ public class ReadmeIntegrationTest {
                         signatureResponse.getSignatureValue(),
                         signableData.dataToSign(),
                         certResponse.certificate(),
-                        signatureResponse.getSignatureAlgorithm().getAlgorithmName(),
+                        signatureResponse.getSignatureAlgorithm(),
                         signatureResponse.getRsaSsaPssParameters());
 
                 assertEquals("OK", signatureResponse.getEndResult());
@@ -546,7 +546,7 @@ public class ReadmeIntegrationTest {
                         signatureResponse.getSignatureValue(),
                         signableData.dataToSign(),
                         certificateChoiceResponse.getCertificate(),
-                        signatureResponse.getSignatureAlgorithm().getAlgorithmName(),
+                        signatureResponse.getSignatureAlgorithm(),
                         signatureResponse.getRsaSsaPssParameters());
 
                 assertEquals("OK", signatureResponse.getEndResult());
@@ -776,7 +776,7 @@ public class ReadmeIntegrationTest {
                     signatureResponse.getSignatureValue(),
                     signableData.dataToSign(),
                     signatureResponse.getCertificate(),
-                    signatureAlgorithm.getAlgorithmName(),
+                    signatureAlgorithm,
                     signatureResponse.getRsaSsaPssParameters());
 
             assertEquals("OK", signatureResponse.getEndResult());
@@ -850,7 +850,7 @@ public class ReadmeIntegrationTest {
                     signatureResponse.getSignatureValue(),
                     signableData.dataToSign(),
                     signatureResponse.getCertificate(),
-                    signatureAlgorithm.getAlgorithmName(),
+                    signatureAlgorithm,
                     signatureResponse.getRsaSsaPssParameters());
 
             assertEquals("OK", signatureResponse.getEndResult());

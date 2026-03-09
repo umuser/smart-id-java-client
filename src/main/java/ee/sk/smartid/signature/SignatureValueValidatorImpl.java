@@ -73,18 +73,17 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
     public void validateLegacyRsa(byte[] signatureValue,
                                   byte[] payload,
                                   X509Certificate certificate,
-                                  String signatureAlgorithmName) {
+                                  SigningSignatureAlgorithm signatureAlgorithm) {
         validateCommonInput(signatureValue, payload, certificate);
-        if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
+        if (signatureAlgorithm == null) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
         }
-        if (!SigningSignatureAlgorithm.isLegacyRsa(signatureAlgorithmName)) {
-            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithmName +
+        if (!signatureAlgorithm.isLegacyRsa()) {
+            throw new UnprocessableSmartIdResponseException("Signature algorithm '" + signatureAlgorithm +
                     "' is not a legacy RSA (RSASSA-PKCS#1 v1.5) algorithm; use validate(..., RsaSsaPssParameters) for RSASSA-PSS");
         }
         try {
-            SigningSignatureAlgorithm algorithm = SigningSignatureAlgorithm.fromString(signatureAlgorithmName);
-            Signature signature = Signature.getInstance(algorithm.getJceAlgorithmName());
+            Signature signature = Signature.getInstance(signatureAlgorithm.getJceAlgorithmName());
             signature.initVerify(certificate.getPublicKey());
             signature.update(payload);
             if (!signature.verify(signatureValue)) {
@@ -99,23 +98,16 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
     public void validate(byte[] signatureValue,
                          byte[] payload,
                          X509Certificate certificate,
-                         String signatureAlgorithmName,
+                         SigningSignatureAlgorithm signatureAlgorithm,
                          RsaSsaPssParameters rsaSsaPssParameters) {
-        if (signatureAlgorithmName == null || signatureAlgorithmName.isBlank()) {
+        if (signatureAlgorithm == null) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
         }
-        SigningSignatureAlgorithm algorithm;
-        try {
-            algorithm = SigningSignatureAlgorithm.fromString(signatureAlgorithmName);
-        } catch (IllegalArgumentException ex) {
-            throw new UnprocessableSmartIdResponseException("Unsupported signature algorithm: " + signatureAlgorithmName, ex);
-        }
-
-        if (algorithm.isLegacyRsa()) {
+        if (signatureAlgorithm.isLegacyRsa()) {
             if (rsaSsaPssParameters != null) {
                 throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' is not allowed for legacy RSA algorithms");
             }
-            validateLegacyRsa(signatureValue, payload, certificate, signatureAlgorithmName);
+            validateLegacyRsa(signatureValue, payload, certificate, signatureAlgorithm);
         } else {
             if (rsaSsaPssParameters == null) {
                 throw new SmartIdClientException("Parameter 'rsaSsaPssParameters' must be provided for RSASSA-PSS algorithm");

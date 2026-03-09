@@ -93,7 +93,7 @@ class SignatureValueValidatorImplTest {
                 SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                 PAYLOAD,
                 certificate,
-                signatureAlgorithm.getAlgorithmName()));
+                signatureAlgorithm));
     }
 
     @ParameterizedTest
@@ -104,7 +104,7 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
-    void validateLegacyRsa_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, String signingSignatureAlgorithm) {
+    void validateLegacyRsa_inputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, SigningSignatureAlgorithm signingSignatureAlgorithm) {
         assertThrows(SmartIdClientException.class, () -> signatureValueValidator.validateLegacyRsa(signatureValue, payload, certificate, signingSignatureAlgorithm));
     }
 
@@ -115,7 +115,7 @@ class SignatureValueValidatorImplTest {
                         SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName()));
+                        SigningSignatureAlgorithm.RSASSA_PSS));
         assertTrue(ex.getMessage().contains("not a legacy RSA"));
     }
 
@@ -138,7 +138,7 @@ class SignatureValueValidatorImplTest {
                         "invalidSignature".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        algorithm.getAlgorithmName()));
+                        algorithm));
         assertEquals("Signature value validation failed", ex.getMessage());
     }
 
@@ -161,7 +161,7 @@ class SignatureValueValidatorImplTest {
                         SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
                         CertificateUtil.toX509CertificateFromEncodedString(CERT),
-                        signatureAlgorithm.getAlgorithmName()));
+                        signatureAlgorithm));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
     }
 
@@ -174,7 +174,7 @@ class SignatureValueValidatorImplTest {
                 SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                 PAYLOAD,
                 certificate,
-                SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                SigningSignatureAlgorithm.RSASSA_PSS,
                 rsaSsaPssParameters));
     }
 
@@ -187,7 +187,7 @@ class SignatureValueValidatorImplTest {
                 SIGNATURE_VALUE_MAP.get(algorithm),
                 PAYLOAD,
                 certificate,
-                algorithm.getAlgorithmName(),
+                algorithm,
                 null));
     }
 
@@ -201,7 +201,7 @@ class SignatureValueValidatorImplTest {
                         SIGNATURE_VALUE_MAP.get(algorithm),
                         PAYLOAD,
                         certificate,
-                        algorithm.getAlgorithmName(),
+                        algorithm,
                         toRsaSsaPssParameters()));
     }
 
@@ -214,7 +214,7 @@ class SignatureValueValidatorImplTest {
                         SIGNATURE_VALUE_MAP.get(SigningSignatureAlgorithm.RSASSA_PSS),
                         PAYLOAD,
                         certificate,
-                        SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        SigningSignatureAlgorithm.RSASSA_PSS,
                         null));
     }
 
