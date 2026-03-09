@@ -4,6 +4,33 @@ Library v3.1 supports only Smart-ID v3 API.
 All the previous v2 related code has been removed and all the code necessary for Smart-ID API v3 is under package smartid. 
 Some classes could also be used in v3 and for those classes the package did not change.
 
+# Migrating from library v3.1 to v3.2
+
+For signing flows are restored legacy RSASSA-PKCS#1 v1.5 algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) which are compatible with DigiDoc4j's signing support.
+For that reason:
+* `SignatureAlgorithm` class is split into `AuthenticationSignatureAlgorithm` and `SigningSignatureAlgorithm`.
+* `SignatureValueValidator` has now 3 methods `validate`, `validateRsaSsaPss` and `validateLegacyRsa` for different use cases instead previous 1 method `validate`
+
+Changes needed in authentication flows:
+* change `SignatureAlgorithm` to `AuthenticationSignatureAlgorithm`
+* change used `SignatureValueValidator` method from `validate` to `validateRsaSsaPss` (only name changed, parameters unchanged)
+
+Changes needed in signing flows:
+* change `SignatureAlgorithm` to `SigningSignatureAlgorithm`
+* suggestion for `SignatureValueValidator` usage:
+    * when using only signature algorithm RSASSA_PSS then use `SignatureValueValidator.validateRsaSsaPss`
+    * when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `SignatureValueValidator.validateLegacyRsa`
+    * when both RSASSA_PSS and legacy RSA algorithms are used then use `SignatureValueValidator.validate`
+
+When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
+```
+return switch (signatureAlgorithm) {
+    case SHA256_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA256;
+    case SHA384_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA384;
+    case SHA512_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA512;
+}
+```
+
 # Migrating from Smart-ID v2 to Smart-ID v3 API
 
 ## Migrating authentication
