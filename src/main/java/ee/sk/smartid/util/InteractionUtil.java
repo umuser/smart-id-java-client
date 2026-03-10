@@ -33,11 +33,11 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.common.SmartIdInteraction;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.signature.DigestCalculator;
-import ee.sk.smartid.signature.HashAlgorithm;
 
 /**
  * Utility for interactions related actions

@@ -29,6 +29,7 @@ package ee.sk.smartid.signature;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 
 /**

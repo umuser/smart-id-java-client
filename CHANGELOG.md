@@ -20,9 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Changed `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `SignatureFactory`:
 - The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature`:
   - `AuthenticationSignatureAlgorithm`
-  - `DigestCalculator`
   - `DigestInput`
-  - `HashAlgorithm`
   - `MaskGenAlgorithm`
   - `RsaSsaPssParameters`
   - `SignableData`

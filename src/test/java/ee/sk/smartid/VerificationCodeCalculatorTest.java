@@ -42,8 +42,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.signature.DigestCalculator;
-import ee.sk.smartid.signature.HashAlgorithm;
 
 
 public class VerificationCodeCalculatorTest {

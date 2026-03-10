@@ -66,8 +66,6 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.VerificationCode;
-import ee.sk.smartid.signature.DigestCalculator;
-import ee.sk.smartid.signature.HashAlgorithm;
 import ee.sk.smartid.signature.SignableData;
 import ee.sk.smartid.signature.SignableHash;
 import ee.sk.smartid.signature.SigningSignatureAlgorithm;

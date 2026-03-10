@@ -28,12 +28,12 @@ package ee.sk.smartid.util;
 
 import java.util.Base64;
 
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.common.devicelink.CallbackUrl;
 import ee.sk.smartid.common.devicelink.UrlSafeTokenGenerator;
 import ee.sk.smartid.exception.SessionSecretMismatchException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.signature.DigestCalculator;
-import ee.sk.smartid.signature.HashAlgorithm;
 import jakarta.ws.rs.core.UriBuilder;
 
 /**

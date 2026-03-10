@@ -26,6 +26,8 @@ package ee.sk.smartid.signature;
  * #L%
  */
 
+import ee.sk.smartid.HashAlgorithm;
+
 /**
  * Represents data to be signed.
  * <p>

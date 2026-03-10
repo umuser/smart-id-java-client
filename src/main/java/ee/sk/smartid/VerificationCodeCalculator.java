@@ -29,8 +29,6 @@ package ee.sk.smartid;
 import java.nio.ByteBuffer;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.signature.DigestCalculator;
-import ee.sk.smartid.signature.HashAlgorithm;
 
 /**
  * Utility class for calculating verification code from a hash.

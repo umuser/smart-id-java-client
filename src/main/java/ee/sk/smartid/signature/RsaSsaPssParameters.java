@@ -26,6 +26,8 @@ package ee.sk.smartid.signature;
  * #L%
  */
 
+import ee.sk.smartid.HashAlgorithm;
+
 /**
  * Encapsulates multiple parameters of RSASSA-PSS
  */

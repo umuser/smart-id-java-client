@@ -58,7 +58,6 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
-import ee.sk.smartid.signature.HashAlgorithm;
 import ee.sk.smartid.signature.MaskGenAlgorithm;
 import ee.sk.smartid.signature.TrailerField;
 import ee.sk.smartid.util.InteractionUtil;

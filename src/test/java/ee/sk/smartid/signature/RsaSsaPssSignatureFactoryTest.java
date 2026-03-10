@@ -34,6 +34,7 @@ import java.security.Signature;
 
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 class RsaSsaPssSignatureFactoryTest {

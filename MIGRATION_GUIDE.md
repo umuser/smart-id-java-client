@@ -28,18 +28,16 @@ Changes needed in signing flows:
     ```
 
 The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature` so when used then imports need to be adjusted:
-* `AuthenticationSignatureAlgorithm`
-* `DigestCalculator`
-* `DigestInput`
-* `HashAlgorithm`
-* `MaskGenAlgorithm`
-* `RsaSsaPssParameters`
-* `SignableData`
-* `SignableHash`
-* `SignatureValueValidator`
-* `SignatureValueValidatorImpl`
-* `SigningSignatureAlgorithm`
-* `TrailerField`
+- `AuthenticationSignatureAlgorithm`
+- `DigestInput`
+- `MaskGenAlgorithm`
+- `RsaSsaPssParameters`
+- `SignableData`
+- `SignableHash`
+- `SignatureValueValidator`
+- `SignatureValueValidatorImpl`
+- `SigningSignatureAlgorithm`
+- `TrailerField`
 
 When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.signature.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
 ```

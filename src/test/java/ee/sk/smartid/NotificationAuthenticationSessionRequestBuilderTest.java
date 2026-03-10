@@ -63,7 +63,6 @@ import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
-import ee.sk.smartid.signature.HashAlgorithm;
 
 class NotificationAuthenticationSessionRequestBuilderTest {
 
