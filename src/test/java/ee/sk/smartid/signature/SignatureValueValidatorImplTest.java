@@ -85,9 +85,9 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_withPkcs15SignatureFactory_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+    void validate_withRsaSsaPkcs1SignatureFactory_ok(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-        SignatureFactory factory = new Pkcs15SignatureFactory(signatureAlgorithm);
+        SignatureFactory factory = new RsaSsaPkcs1SignatureFactory(signatureAlgorithm);
 
         assertDoesNotThrow(() -> signatureValueValidator.validate(
                 SIGNATURE_VALUE_MAP.get(signatureAlgorithm),
@@ -119,9 +119,9 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_withPkcs15SignatureFactory_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
+    void validate_withRsaSsaPkcs1SignatureFactory_invalidSignature_throwException(SigningSignatureAlgorithm algorithm) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-        SignatureFactory factory = new Pkcs15SignatureFactory(algorithm);
+        SignatureFactory factory = new RsaSsaPkcs1SignatureFactory(algorithm);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(
@@ -148,9 +148,9 @@ class SignatureValueValidatorImplTest {
 
     @ParameterizedTest
     @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-    void validate_withPkcs15SignatureFactory_payloadDoesNotMatch_throwException(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
+    void validate_withRsaSsaPkcs1SignatureFactory_payloadDoesNotMatch_throwException(SigningSignatureAlgorithm signatureAlgorithm) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
-        SignatureFactory factory = new Pkcs15SignatureFactory(signatureAlgorithm);
+        SignatureFactory factory = new RsaSsaPkcs1SignatureFactory(signatureAlgorithm);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> signatureValueValidator.validate(

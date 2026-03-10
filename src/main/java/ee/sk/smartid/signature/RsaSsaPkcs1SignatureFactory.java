@@ -35,7 +35,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 /**
  * {@link SignatureFactory} implementation for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
  */
-public final class Pkcs15SignatureFactory implements SignatureFactory {
+public final class RsaSsaPkcs1SignatureFactory implements SignatureFactory {
 
     private final SigningSignatureAlgorithm signingSignatureAlgorithm;
 
@@ -46,7 +46,7 @@ public final class Pkcs15SignatureFactory implements SignatureFactory {
      * @throws SmartIdClientException                if {@code signingSignatureAlgorithm} is null
      * @throws UnprocessableSmartIdResponseException if the algorithm is not a legacy RSA algorithm
      */
-    public Pkcs15SignatureFactory(SigningSignatureAlgorithm signingSignatureAlgorithm) {
+    public RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm signingSignatureAlgorithm) {
         if (signingSignatureAlgorithm == null) {
             throw new SmartIdClientException("Parameter 'signatureAlgorithmName' is not provided");
         }

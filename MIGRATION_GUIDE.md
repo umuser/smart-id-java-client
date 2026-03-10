@@ -19,11 +19,11 @@ Changes needed in signing flows:
 - change `SignatureAlgorithm` to `SigningSignatureAlgorithm`
 - suggestion for `SignatureValueValidator.validate` last parameter changes:
   - when using only signature algorithm RSASSA_PSS then use `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
-  - when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `new Pkcs15SignatureFactory(SigningSignatureAlgorithm)`
+  - when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `new RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm)`
   - when both RSASSA_PSS and legacy RSA algorithms are used then possible solution is:
     ```
     SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
-            ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+            ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
             : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
     ```
 
@@ -105,7 +105,7 @@ Prerequisite:
     SignatureValueValidator validator = new SignatureValueValidatorImpl();
     SigningSignatureAlgorithm signatureAlgorithm = signatureResponse.getSignatureAlgorithm();
     SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
-            ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+            ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
             : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
     validator.validate(
             signatureValue,

@@ -36,24 +36,24 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-class Pkcs15SignatureFactoryTest {
+class RsaSsaPkcs1SignatureFactoryTest {
 
     @Test
     void constructor_nullAlgorithm_throwException() {
-        var ex = assertThrows(SmartIdClientException.class, () -> new Pkcs15SignatureFactory(null));
+        var ex = assertThrows(SmartIdClientException.class, () -> new RsaSsaPkcs1SignatureFactory(null));
         assertEquals("Parameter 'signatureAlgorithmName' is not provided", ex.getMessage());
     }
 
     @Test
     void constructor_nonLegacyAlgorithm_throwException() {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> new Pkcs15SignatureFactory(SigningSignatureAlgorithm.RSASSA_PSS));
+                () -> new RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm.RSASSA_PSS));
         assertTrue(ex.getMessage().contains("not a legacy RSA"));
     }
 
     @Test
     void getSignature_legacyAlgorithm_returnsSignatureInstance() {
-        var factory = new Pkcs15SignatureFactory(SigningSignatureAlgorithm.SHA256_WITH_RSA_ENCRYPTION);
+        var factory = new RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm.SHA256_WITH_RSA_ENCRYPTION);
 
         var signature = factory.getSignature();
 

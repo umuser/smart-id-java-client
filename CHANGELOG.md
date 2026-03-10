@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Only allowed `AuthenticationSignatureAlgorithm` is `RSASSA_PSS`; default `SigningSignatureAlgorithm` is `RSASSA_PSS`.
 - Added `SignatureFactory` interface for creating `java.security.Signature` instance for verifying signature and added its implementations:
   - `RsaSsaPssSignatureFactory`
-  - `Pkcs15SignatureFactory`
+  - `RsaSsaPkcs1SignatureFactory`
 - Changed `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `SignatureFactory`:
 - The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature`:
   - `AuthenticationSignatureAlgorithm`

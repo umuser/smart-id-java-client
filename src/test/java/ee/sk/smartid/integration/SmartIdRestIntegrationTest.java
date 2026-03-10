@@ -314,8 +314,8 @@ class SmartIdRestIntegrationTest {
 
             @ParameterizedTest
             @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-            void initNotificationSignature_withPkcs15Algorithm_andSemanticIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
-                var request = toSignatureSessionRequestWithPkcs15(signatureAlgorithm);
+            void initNotificationSignature_withRsaSsaPkcs1Algorithm_andSemanticIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
+                var request = toSignatureSessionRequestWithRsaSsaPkcs1(signatureAlgorithm);
 
                 NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
@@ -326,8 +326,8 @@ class SmartIdRestIntegrationTest {
 
             @ParameterizedTest
             @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
-            void initNotificationSignature_withPkcs15Algorithm_andDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
-                var request = toSignatureSessionRequestWithPkcs15(signatureAlgorithm);
+            void initNotificationSignature_withRsaSsaPkcs1Algorithm_andDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
+                var request = toSignatureSessionRequestWithRsaSsaPkcs1(signatureAlgorithm);
 
                 NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
@@ -336,7 +336,7 @@ class SmartIdRestIntegrationTest {
                 assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().type());
             }
 
-            private static NotificationSignatureSessionRequest toSignatureSessionRequestWithPkcs15(SigningSignatureAlgorithm signatureAlgorithm) {
+            private static NotificationSignatureSessionRequest toSignatureSessionRequestWithRsaSsaPkcs1(SigningSignatureAlgorithm signatureAlgorithm) {
                 byte[] digest = DigestCalculator.calculateDigest("test".getBytes(), signatureAlgorithm.getHashAlgorithmForLegacy());
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
                         Base64.toBase64String(digest),

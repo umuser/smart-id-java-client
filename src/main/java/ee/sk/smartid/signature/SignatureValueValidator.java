@@ -35,7 +35,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
  * <p>
  * Use a concrete {@link SignatureFactory} implementation to specify the signature algorithm and parameters:
  * {@link RsaSsaPssSignatureFactory} for RSASSA-PSS (authentication and signing), or
- * {@link Pkcs15SignatureFactory} for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
+ * {@link RsaSsaPkcs1SignatureFactory} for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
  * The factory encapsulates algorithm choice and parameter validation.
  */
 public interface SignatureValueValidator {

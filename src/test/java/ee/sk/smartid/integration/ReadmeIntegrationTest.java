@@ -96,7 +96,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.signature.HashAlgorithm;
-import ee.sk.smartid.signature.Pkcs15SignatureFactory;
+import ee.sk.smartid.signature.RsaSsaPkcs1SignatureFactory;
 import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
 import ee.sk.smartid.signature.SignableData;
 import ee.sk.smartid.signature.SignatureFactory;
@@ -439,7 +439,7 @@ public class ReadmeIntegrationTest {
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
-                        ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
                         : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
                 signatureValueValidator.validate(
                         signatureResponse.getSignatureValue(),
@@ -548,7 +548,7 @@ public class ReadmeIntegrationTest {
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
-                        ? new Pkcs15SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
                         : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
                 signatureValueValidator.validate(
                         signatureResponse.getSignatureValue(),
@@ -780,7 +780,7 @@ public class ReadmeIntegrationTest {
 
             SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
             SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
-                    ? new Pkcs15SignatureFactory(signatureAlgorithm)
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
                     : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
             signatureValueValidator.validate(
                     signatureResponse.getSignatureValue(),
@@ -856,7 +856,7 @@ public class ReadmeIntegrationTest {
 
             SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
             SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
-                    ? new Pkcs15SignatureFactory(signatureAlgorithm)
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
                     : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
             signatureValueValidator.validate(
                     signatureResponse.getSignatureValue(),
