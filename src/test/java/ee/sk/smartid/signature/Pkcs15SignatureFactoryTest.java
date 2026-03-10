@@ -27,6 +27,7 @@ package ee.sk.smartid.signature;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,5 +49,15 @@ class Pkcs15SignatureFactoryTest {
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
                 () -> new Pkcs15SignatureFactory(SigningSignatureAlgorithm.RSASSA_PSS));
         assertTrue(ex.getMessage().contains("not a legacy RSA"));
+    }
+
+    @Test
+    void getSignature_legacyAlgorithm_returnsSignatureInstance() {
+        var factory = new Pkcs15SignatureFactory(SigningSignatureAlgorithm.SHA256_WITH_RSA_ENCRYPTION);
+
+        var signature = factory.getSignature();
+
+        assertNotNull(signature);
+        assertEquals(SigningSignatureAlgorithm.SHA256_WITH_RSA_ENCRYPTION.getJceAlgorithmName(), signature.getAlgorithm());
     }
 }

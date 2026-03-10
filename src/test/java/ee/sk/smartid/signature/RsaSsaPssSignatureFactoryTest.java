@@ -27,7 +27,10 @@ package ee.sk.smartid.signature;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.security.Signature;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,5 +42,22 @@ class RsaSsaPssSignatureFactoryTest {
     void constructor_nullParameters_throwException() {
         var ex = assertThrows(SmartIdClientException.class, () -> new RsaSsaPssSignatureFactory(null));
         assertEquals("Parameter 'rsaSsaPssParameters' is not provided", ex.getMessage());
+    }
+
+    @Test
+    void getSignature_validParameters_returnsConfiguredSignature() {
+        var rsaSsaPssParameters = new RsaSsaPssParameters();
+        rsaSsaPssParameters.setDigestHashAlgorithm(HashAlgorithm.SHA_256);
+        rsaSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+        rsaSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.SHA_256);
+        rsaSsaPssParameters.setSaltLength(32);
+        rsaSsaPssParameters.setTrailerField(TrailerField.BC);
+
+        SignatureFactory factory = new RsaSsaPssSignatureFactory(rsaSsaPssParameters);
+
+        Signature signature = factory.getSignature();
+
+        assertNotNull(signature);
+        assertEquals(rsaSsaPssParameters.getSignatureAlgorithmName(), signature.getAlgorithm());
     }
 }
