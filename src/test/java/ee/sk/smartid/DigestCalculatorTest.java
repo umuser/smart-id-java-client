@@ -1,4 +1,4 @@
-package ee.sk.smartid.signature;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -42,8 +42,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-import ee.sk.smartid.DigestCalculator;
-import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 public class DigestCalculatorTest {
