@@ -28,6 +28,23 @@ package ee.sk.smartid.signature;
 
 import java.security.Signature;
 
+/**
+ * Factory for creating preconfigured {@link Signature} instances used when
+ * validating Smart-ID signatures.
+ * <p>
+ * Implementations encapsulate the details of the concrete signature algorithm
+ * (for example RSASSA-PSS or legacy RSASSA-PKCS#1 v1.5) so that callers can
+ * obtain a correctly initialised {@link Signature} object without dealing with
+ * low-level JCA configuration.
+ */
 public interface SignatureFactory {
+
+    /**
+     * Creates a new {@link Signature} instance configured for the underlying
+     * Smart-ID signature algorithm.
+     *
+     * @return a configured {@link Signature} implementation ready for public key
+     *         initialization
+     */
     Signature getSignature();
 }
