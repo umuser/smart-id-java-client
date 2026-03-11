@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ package ee.sk.smartid;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -65,6 +66,9 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class NotificationSignatureSessionRequestBuilderTest {
 
@@ -174,7 +178,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
 
     @ParameterizedTest
@@ -192,7 +196,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.signatureProtocolParameters().digest());
         assertEquals(hashAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
@@ -211,7 +215,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
 
     @ParameterizedTest
@@ -227,8 +231,8 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
-        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.signatureProtocolParameters().digest());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(signableData.getDigestInBase64(), capturedRequest.signatureProtocolParameters().digest());
         assertEquals(hashAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
     }
@@ -247,6 +251,27 @@ class NotificationSignatureSessionRequestBuilderTest {
         NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertEquals(expectedCapabilities, capturedRequest.capabilities());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
+    }
+
+    @ParameterizedTest
+    @EnumSource(SigningSignatureAlgorithm.class)
+    void initSignatureSession_withSignatureAlgorithm_ok(SigningSignatureAlgorithm signatureAlgorithm) {
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+
+        toNotificationSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm))
+                .initSignatureSession();
+
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
+        verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(signatureAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        if (signatureAlgorithm.isLegacyRsa()) {
+            assertNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+        } else {
+            assertNotNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+            assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
+        }
     }
 
     @Nested

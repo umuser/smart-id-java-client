@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@ package ee.sk.smartid;
  * THE SOFTWARE.
  * #L%
  */
+
+import ee.sk.smartid.HashAlgorithm;
 
 /**
  * Represents data to be signed.

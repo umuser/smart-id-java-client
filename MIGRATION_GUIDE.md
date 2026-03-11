@@ -4,6 +4,43 @@ Library v3.1 supports only Smart-ID v3 API.
 All the previous v2 related code has been removed and all the code necessary for Smart-ID API v3 is under package smartid. 
 Some classes could also be used in v3 and for those classes the package did not change.
 
+# Migrating from library v3.1 to v3.2
+
+For signing flows are restored legacy RSASSA-PKCS#1 v1.5 algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) which are compatible with DigiDoc4j's signing support.
+For that reason:
+- `SignatureAlgorithm` class is split into `AuthenticationSignatureAlgorithm` and `SigningSignatureAlgorithm`.
+- `SignatureValueValidator.validate` last parameter changed from `RsaSsaPssParameters` to `SignatureFactory`
+
+Changes needed in authentication flows:
+- change `SignatureAlgorithm` to `AuthenticationSignatureAlgorithm`
+- change `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
+
+Changes needed in signing flows:
+- change `SignatureAlgorithm` to `SigningSignatureAlgorithm`
+- suggestion for `SignatureValueValidator.validate` last parameter changes:
+  - when using only signature algorithm RSASSA_PSS then use `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
+  - when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `new RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm)`
+  - when both RSASSA_PSS and legacy RSA algorithms are used then possible solution is:
+    ```java
+    SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+            ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+            : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+    ```
+
+The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature` so when used then imports need to be adjusted:
+- `AuthenticationSignatureAlgorithm`
+- `DigestInput`
+- `MaskGenAlgorithm`
+- `RsaSsaPssParameters`
+- `SignableData`
+- `SignableHash`
+- `SignatureValueValidator`
+- `SignatureValueValidatorImpl`
+- `SigningSignatureAlgorithm`
+- `TrailerField`
+
+For legacy RSA with DigiDoc4j there is new chapter in README.md: [Legacy algorithms for signing with DigiDoc4j](./README.md#legacy-algorithms-for-signing-with-digidoc4j)
+
 # Migrating from Smart-ID v2 to Smart-ID v3 API
 
 ## Migrating authentication

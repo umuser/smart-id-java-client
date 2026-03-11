@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import ee.sk.smartid.signature.DigestInput;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +73,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private DigestInput digestInput;
 
     /**
@@ -186,7 +190,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public NotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public NotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -265,9 +269,12 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private NotificationSignatureSessionRequest createSignatureSessionRequest() {
+        SignatureAlgorithmParameters algorithmParams = signatureAlgorithm.isLegacyRsa()
+                ? null
+                : new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName());
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+                algorithmParams);
 
         return new NotificationSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,

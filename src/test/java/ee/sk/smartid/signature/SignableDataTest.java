@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Base64;
 
@@ -35,30 +34,37 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 
-class SignableHashTest {
+class SignableDataTest {
 
-    private static final byte[] DIGEST = DigestCalculator.calculateDigest("Test data".getBytes(), HashAlgorithm.SHA_512);
+    private static final byte[] TEST_DATA = "Test data".getBytes();
 
     @Test
     void getDigestInBase64() {
-        SignableHash signableHash = new SignableHash(DIGEST, HashAlgorithm.SHA_512);
+        SignableData signableData = new SignableData(TEST_DATA, HashAlgorithm.SHA_512);
+        assertEquals(Base64.getEncoder().encodeToString(DigestCalculator.calculateDigest(TEST_DATA, HashAlgorithm.SHA_512)), signableData.getDigestInBase64());
+        assertEquals(HashAlgorithm.SHA_512, signableData.hashAlgorithm());
+    }
 
-        assertEquals(Base64.getEncoder().encodeToString(DIGEST), signableHash.getDigestInBase64());
-        assertEquals(HashAlgorithm.SHA_512, signableHash.hashAlgorithm());
+    @Test
+    void calculateHash() {
+        SignableData signableData = new SignableData(TEST_DATA, HashAlgorithm.SHA_512);
+        assertArrayEquals(DigestCalculator.calculateDigest(TEST_DATA, HashAlgorithm.SHA_512), signableData.calculateHash());
     }
 
     @ParameterizedTest
     @NullAndEmptySource
-    void emptyHashValueProvided_throwException(byte[] hash) {
-        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableHash(hash));
-        assertEquals("Parameter 'hash' cannot be empty", ex.getMessage());
+    void emptyHashProvided_throwException(byte[] dataToSign) {
+        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableData(dataToSign));
+        assertEquals("Parameter 'dataToSign' cannot be empty", ex.getMessage());
     }
 
     @Test
-    void defaultHashAlgorithmOverriddenToNull_throwException() {
-        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableHash(DIGEST, null));
+    void defaultHashAlgorithmSetToNull_throwException() {
+        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableData(TEST_DATA, null));
         assertEquals("Parameter 'hashAlgorithm' must be set", ex.getMessage());
     }
 }

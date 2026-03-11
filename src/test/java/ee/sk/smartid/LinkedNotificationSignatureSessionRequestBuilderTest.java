@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@ package ee.sk.smartid;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -54,6 +56,9 @@ import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class LinkedNotificationSignatureSessionRequestBuilderTest {
 
@@ -124,6 +129,30 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
         verify(connector).initLinkedNotificationSignature(requestCaptor.capture(), eq(DOCUMENT_NUMBER));
         LinkedSignatureSessionRequest request = requestCaptor.getValue();
         assertEquals(expectedRequestCapabilities, request.capabilities());
+    }
+
+
+    @ParameterizedTest
+    @EnumSource(SigningSignatureAlgorithm.class)
+    void initSignatureSession_withSignatureAlgorithm_ok(SigningSignatureAlgorithm signatureAlgorithm) {
+        LinkedNotificationSignatureSessionRequestBuilder builder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER)))
+                .thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
+
+        LinkedSignatureSessionResponse response = builder.initSignatureSession();
+
+        assertEquals("20000000-0000-0000-0000-000000000000", response.sessionID());
+
+        ArgumentCaptor<LinkedSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(LinkedSignatureSessionRequest.class);
+        verify(connector).initLinkedNotificationSignature(requestCaptor.capture(), eq(DOCUMENT_NUMBER));
+        LinkedSignatureSessionRequest request = requestCaptor.getValue();
+        assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
+        if (signatureAlgorithm.isLegacyRsa()) {
+            assertNull(request.signatureProtocolParameters().signatureAlgorithmParameters());
+        } else {
+            assertNotNull(request.signatureProtocolParameters().signatureAlgorithmParameters());
+            assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
+        }
     }
 
     @Nested

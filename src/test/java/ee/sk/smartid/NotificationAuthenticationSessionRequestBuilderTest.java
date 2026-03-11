@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,7 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
 
 class NotificationAuthenticationSessionRequestBuilderTest {
 
@@ -133,8 +134,8 @@ class NotificationAuthenticationSessionRequestBuilderTest {
     }
 
     @ParameterizedTest
-    @EnumSource
-    void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+    @EnumSource(value = AuthenticationSignatureAlgorithm.class, names = {"RSASSA_PSS"})
+    void initAuthenticationSession_signatureAlgorithm_ok(AuthenticationSignatureAlgorithm signatureAlgorithm) {
         when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
         NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
 

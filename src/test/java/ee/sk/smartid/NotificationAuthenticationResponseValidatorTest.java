@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,6 +51,9 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.MaskGenAlgorithm;
+import ee.sk.smartid.signature.TrailerField;
 
 class NotificationAuthenticationResponseValidatorTest {
 
@@ -149,7 +152,7 @@ class NotificationAuthenticationResponseValidatorTest {
                 certificateLevel,
                 SignatureProtocol.ACSP_V2.name(),
                 new AcspV2SignatureProtocolParameters("3mhDkd0ulDR/WVZx678FcrNw4pUhrZxcQsmejf8jQ1HtSp3GAxCH/Fi9EEiuULp44G/KNKONPXZELqCSZw4AoA==",
-                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
                 "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbiB3aXRoIFNtYXJ0LUlEIGRlbW8/In1d",
                 null,
@@ -180,7 +183,7 @@ class NotificationAuthenticationResponseValidatorTest {
         signature.setUserChallenge("RvrVNS1GJYCsuEnEqPCdHHn5vl65F3XiBjmxB4zSosw");
         signature.setValue(signatureValue);
         signature.setFlowType(FlowType.NOTIFICATION.getDescription());
-        signature.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        signature.setSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
         signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
 
         var cert = new SessionCertificate();

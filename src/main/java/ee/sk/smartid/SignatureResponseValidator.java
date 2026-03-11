@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,10 @@ import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.MaskGenAlgorithm;
+import ee.sk.smartid.signature.RsaSsaPssParameters;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
+import ee.sk.smartid.signature.TrailerField;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -110,15 +114,18 @@ public class SignatureResponseValidator {
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        signatureResponse.setSignatureAlgorithm(SigningSignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()));
 
-        SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
-        var rsaSsaPssParams = new RsaSsaPssParameters();
-        rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
-        rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
-        rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        rsaSsaPssParams.setTrailerField(TrailerField.BC);
-        signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
+        if (!SigningSignatureAlgorithm.isLegacyRsa(sessionSignature.getSignatureAlgorithm())) {
+            SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+            var rsaSsaPssParams = new RsaSsaPssParameters();
+            rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+            rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+            rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+            rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+            rsaSsaPssParams.setTrailerField(TrailerField.BC);
+            signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
+        }
 
         signatureResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
@@ -234,7 +241,9 @@ public class SignatureResponseValidator {
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
-        validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
+        if (!SigningSignatureAlgorithm.isLegacyRsa(signature.getSignatureAlgorithm())) {
+            validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
+        }
     }
 
     private static void validateSignatureValue(String value) {
@@ -251,8 +260,8 @@ public class SignatureResponseValidator {
             throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' is missing");
         }
 
-        if (!SignatureAlgorithm.isSupported(signatureAlgorithm)) {
-            List<String> possibleValues = Arrays.stream(SignatureAlgorithm.values()).map(SignatureAlgorithm::getAlgorithmName).toList();
+        if (!SigningSignatureAlgorithm.isSupported(signatureAlgorithm)) {
+            List<String> possibleValues = Arrays.stream(SigningSignatureAlgorithm.values()).map(SigningSignatureAlgorithm::getAlgorithmName).toList();
             logger.error("Signature session status field 'signature.signatureAlgorithm' has unsupported value: {}. Possible values: {}", signatureAlgorithm, possibleValues);
             throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' has unsupported value");
         }

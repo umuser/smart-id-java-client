@@ -56,6 +56,7 @@ This library supports Smart-ID API v3.1.
           * [Error handling for session status](#error-handling-for-session-status)
     * [Certificate by document number](#certificate-by-document-number)
       * [Example of querying certificate by document number](#example-of-querying-certificate-by-document-number)
+    * [Legacy algorithms for signing with DigiDoc4j](#legacy-algorithms-for-signing-with-digidoc4j)
     * [Linked signature session flow](#linked-signature-flow)
       * [Device link certificate choice session](#device-link-certificate-choice-session)
         * [Examples of initiating a device-link certificate choice session](#example-of-initiating-a-device-link-certificate-choice-session)
@@ -203,9 +204,9 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V2.
 * `signatureProtocolParameters`: Required. Parameters for the ACSP_V2 signature protocol.
     * `rpChallenge`: Required. Base64-encoded value, length between 44 and 88 characters.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Supported value only `rsassa-pss`.
+    * `signatureAlgorithm`: Required. Use `AuthenticationSignatureAlgorithm` enum. Supported value: `RSASSA_PSS`.
     * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+        * `hashAlgorithm`: Required. Use `HashAlgorithm` enum. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
 * `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
@@ -240,6 +241,8 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         // to use anonymous authentication, do not set semantics identifier or document number
         .withRpChallenge(rpChallenge)
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
@@ -289,6 +292,8 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         .withSemanticsIdentifier(semanticsIdentifier)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
@@ -331,6 +336,8 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         .withDocumentNumber(documentNumber)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
@@ -377,6 +384,8 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         .withDocumentNumber(documentNumber)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ))
@@ -419,9 +428,9 @@ The request parameters for the device-link signature session are as follows:
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Only supported value is `rsassa-pss`
-    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+    * `signatureAlgorithm`: Required. Use `SigningSignatureAlgorithm` enum. Supported: `RSASSA_PSS` (default), `SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`. Legacy algorithms are compatible with DigiDoc4j.
+    * `signatureAlgorithmParameters`: Required for RSASSA_PSS; omit for legacy algorithms. Parameters for the signature algorithm.
+        * `hashAlgorithm`: Required. Use `HashAlgorithm` enum. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
 * `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
@@ -461,6 +470,7 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
+    .withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
     .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
@@ -494,6 +504,7 @@ DeviceLinkSessionResponse signatureResponse = smartIdClient.createDeviceLinkSign
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
+    .withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
@@ -918,13 +929,17 @@ try {
     // Initialize the signature response validator with CertificateValidator
     SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
-    SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
-    // Validate signature value. This step can be skipped if other means of validating the signature value can be used. 
+    SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
+    // Validate signature value using suitable SignatureFactory, for RSASSA_PSS use RsaSsaPssSignatureFactory and for legacy RSA RsaSsaPkcs1SignatureFactory
     SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
-    signatureValueValidator.validate(signatureResponse.getSignatureValue(),
-            signableData.calculateHash(),
+    SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+            ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+            : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+    signatureValueValidator.validate(
+            signatureResponse.getSignatureValue(),
+            signableData.dataToSign(),
             certResponse.certificate(),
-            signatureResponse.getRsaSsaPssParameters());
+            signatureFactory);
 
     // Process the response (e.g., save to database or pass to another system)
     handleSignatureResponse(signatureResponse);
@@ -1003,6 +1018,86 @@ certificateValidator.validateCertificate(certResponse.certificate());
 ```
 Checkout out other ways to set up TrustedCaCertStore with CertificateValidator in [Set up CertificateValidator](#set-up-certificatevalidator).
 
+## Legacy algorithms for signing with DigiDoc4j
+
+DigiDoc4j library does not support RSASSA-PSS. To sign with DigiDoc4j, use legacy algorithms: `SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, or `SHA512_WITH_RSA_ENCRYPTION` from `SigningSignatureAlgorithm`.
+
+When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.signature.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
+```java
+switch (signatureAlgorithm) {
+    case SHA256_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA256;
+    case SHA384_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA384;
+    case SHA512_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA512;
+}
+```
+
+### Create `SignableData` with DigiDoc4j's `SignatureBuilder` using the queried certificate
+
+Sample code snippet (Prerequisite: `SmartIdClient smartIdClient` configured and available to use):
+
+```java
+var signatureCertificateLevel = CertificateLevel.QUALIFIED;
+var documentNumber = "PNOEE-40504040001-DEM0-Q";
+var dataBytes = "Signable data".getBytes();
+var dataFileName = "test.txt";
+var dataFileMimeType = "text/plain";
+var signatureAlgorithm = SigningSignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION;
+org.digidoc4j.DigestAlgorithm digestAlgorithm = DigestAlgorithm.SHA512;
+
+var certificateByDocumentNumberResult = smartIdClient
+        .createCertificateByDocumentNumber()
+        .withDocumentNumber(documentNumber)
+        .withCertificateLevel(signatureCertificateLevel)
+        .getCertificateByDocumentNumber();
+var certificate = certificateByDocumentNumberResult.certificate();
+
+org.digidoc4j.Configuration configuration = new Configuration(Configuration.Mode.PROD);
+org.digidoc4j.DataFile dataFile = new DataFile(dataBytes, dataFileName, dataFileMimeType);
+org.digidoc4j.Container container = ContainerBuilder.aContainer()
+        .withConfiguration(configuration)
+        .withDataFile(dataFile)
+        .build();
+org.digidoc4j.DataToSign dataToSign = SignatureBuilder.aSignature(container)
+        .withSigningCertificate(certificate)
+        .withSignatureDigestAlgorithm(digestAlgorithm)
+        .withSignatureProfile(SignatureProfile.LT)
+        .buildDataToSign();
+byte[] dataToSignBytes = dataToSign.getDataToSign();
+SignableData signableData = new SignableData(dataToSignBytes, signatureAlgorithm.getHashAlgorithmForLegacy());
+```
+
+### Validating signature using DigiDoc4j
+
+Prerequisite:
+- `container` and `dataToSign` are the same as in previous code fragment
+- `SignatureResponse signatureResponse` is read from RP API with successful response
+
+Sample code snippet:
+```java
+byte[] signatureValue = signatureResponse.getSignatureValue();
+
+SignatureValueValidator validator = new SignatureValueValidatorImpl();
+SigningSignatureAlgorithm signatureAlgorithm = signatureResponse.getSignatureAlgorithm();
+SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+validator.validate(
+        signatureValue,
+        dataToSign.getDataToSign(),
+        signatureResponse.getCertificate(),
+        signatureFactory);
+
+org.digidoc4j.Signature digiDoc4jSignature = dataToSign.finalize(signatureValue);
+container.addSignature(digiDoc4jSignature);
+
+org.digidoc4j.ValidationResult validationResult = digiDoc4jSignature.validateSignature();
+
+// possible data to use and DigiDoc4J container to save
+boolean signatureValid = validationResult.isValid();
+Date timeStampCreationTime = digiDoc4jSignature.getTimeStampCreationTime();
+container.saveAsFile("targetPath");
+```
+
 ## Linked signature flow
 
 In API v3.1 a new flow was introduced to link signature session to a previously completed certificate choice session.
@@ -1062,9 +1157,9 @@ Second part of the linked signature flow. Will be used to start the signature se
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Only supported value is `rsassa-pss`
-    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+    * `signatureAlgorithm`: Required. Use `SigningSignatureAlgorithm` enum. Supported: `RSASSA_PSS` (default), legacy algorithms for DigiDoc4j compatibility.
+    * `signatureAlgorithmParameters`: Required for RSASSA_PSS; omit for legacy algorithms.
+        * `hashAlgorithm`: Required. Use `HashAlgorithm` enum. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
 * `linkedSessionID`: Required. Session ID of the previously completed certificate choice session.
 * `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
     * Each interaction object includes:
@@ -1091,6 +1186,7 @@ LinkedSignatureSessionResponse signatureSessionResponse = smartIdClient.createLi
         .withDocumentNumber(certificateChoiceResponse.getDocumentNumber())
         .withLinkedSessionID(certificateChoiceSessionResponse.sessionID())
         .withSignableData(new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256))
+        .withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS)
         .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
         .initSignatureSession();
 
@@ -1127,9 +1223,9 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V2.
 * `signatureProtocolParameters`: Required. Parameters for the ACSP_V2 signature protocol.
     * `rpChallenge`: Required. Random value with size in range of 32-64 bytes. Must be Base64 encoded.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Supported values is 'rsassa-pss'
+    * `signatureAlgorithm`: Required. Use `AuthenticationSignatureAlgorithm` enum. Supported value: `RSASSA_PSS`.
     * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
-      * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+      * `hashAlgorithm`: Required. Use `HashAlgorithm` enum. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
 * `interactions`: Required. An array of interaction objects defining the interactions in order of preference.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`, `confirmationMessageAndVerificationCodeChoice`.
@@ -1162,6 +1258,8 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withDocumentNumber(documentNumber)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
                 NotificationInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ))
@@ -1194,6 +1292,8 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withSemanticsIdentifier(semanticsIdentifier)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
             NotificationInteraction.displayTextAndPin("Logging into <app-name>")))  // Display text should be concise and specific.
         .initAuthenticationSession();
@@ -1255,9 +1355,9 @@ The request parameters for the notification-based signature session are as follo
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Only `rsassa-pss` is currently supported.
-    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm used for digest. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+    * `signatureAlgorithm`: Required. Use `SigningSignatureAlgorithm` enum. Supported: `RSASSA_PSS` (default), legacy algorithms for DigiDoc4j compatibility.
+    * `signatureAlgorithmParameters`: Required for RSASSA_PSS; omit for legacy algorithms.
+        * `hashAlgorithm`: Required. Use `HashAlgorithm` enum. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
 * `interactions`: Required. Base64-encoded string of interactions to be used for a session. The interactions are defined in order of preference.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`, `confirmationMessageAndVerificationCodeChoice`.
@@ -1293,6 +1393,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.cr
         .withCertificateLevel(CertificateLevel.QSCD)
         .withSignableData(signableData)
         .withSemanticsIdentifier(semanticsIdentifier)
+        .withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS)
         .withInteractions(List.of(
                 NotificationInteraction.confirmationMessage("Please sign the <document-name>")) // Display text should be concise and specific.
         ) 
@@ -1302,7 +1403,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.cr
 String sessionID = signatureSessionResponse.sessionID();
 
 // Display verification code to the user
-String verificationCode = signatureSessionResponse.vc().getValue();
+String verificationCode = signatureSessionResponse.vc().value();
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
@@ -1322,7 +1423,8 @@ NotificationSignatureSessionResponse signatureResponse = client.createNotificati
     .withCertificateLevel(CertificateLevel.QUALIFIED)
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
-    .withAllowedInteractionsOrder(List.of(
+    .withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS)
+    .withInteractions(List.of(
             NotificationInteraction.confirmationMessage("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
 

@@ -4,7 +4,7 @@ package ee.sk.smartid.integration;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
@@ -71,14 +73,11 @@ import ee.sk.smartid.QrCodeGenerator;
 import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
-import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureCertificatePurposeValidator;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactory;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactoryImpl;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseValidator;
-import ee.sk.smartid.SignatureValueValidator;
-import ee.sk.smartid.SignatureValueValidatorImpl;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
@@ -97,6 +96,13 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.RsaSsaPkcs1SignatureFactory;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignatureFactory;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
+import ee.sk.smartid.signature.SignatureValueValidator;
+import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.CallbackUrlUtil;
 
 @SmartIdDemoIntegrationTest
@@ -432,7 +438,14 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
-                signatureValueValidator.validate(signatureResponse.getSignatureValue(), signableData.calculateHash(), certResponse.certificate(), signatureResponse.getRsaSsaPssParameters());
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        certResponse.certificate(),
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -464,7 +477,7 @@ public class ReadmeIntegrationTest {
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
                 // Querying the sessions status
-                SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+                SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
                 CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
@@ -534,10 +547,14 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
-                signatureValueValidator.validate(signatureResponse.getSignatureValue(),
-                        signableData.calculateHash(),
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
                         certificateChoiceResponse.getCertificate(),
-                        signatureResponse.getRsaSsaPssParameters());
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -693,8 +710,9 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
 
-        @Test
-        void signature_withSemanticsIdentifier() {
+        @ParameterizedTest
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withSemanticsIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
             var semanticIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
                     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -716,7 +734,7 @@ public class ReadmeIntegrationTest {
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
             // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+            SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
@@ -724,8 +742,9 @@ public class ReadmeIntegrationTest {
             CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus, certificateLevel);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             // Create the Semantics Identifier
             var semanticsIdentifier = new SemanticsIdentifier(
@@ -736,6 +755,7 @@ public class ReadmeIntegrationTest {
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withInteractions(List.of(
@@ -758,17 +778,28 @@ public class ReadmeIntegrationTest {
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+            signatureValueValidator.validate(
+                    signatureResponse.getSignatureValue(),
+                    signableData.dataToSign(),
+                    signatureResponse.getCertificate(),
+                    signatureFactory);
+
             assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOEE-40504040001-DEMO-Q", signatureResponse.getDocumentNumber());
+            assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
             assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
             assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
         }
 
-        @Test
-        void signature_withDocumentNumber() {
-            String documentNumber = "PNOEE-40504040001-DEMO-Q";
+        @ParameterizedTest
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
+            String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
             CertificateLevel certificateLevel = CertificateLevel.QSCD;
             // Query the certificate by document number to be used for creating the DataToSign
@@ -791,11 +822,13 @@ public class ReadmeIntegrationTest {
 
             // For example use digidoc4j with SignatureBuilder to create DataToSign using `certificateByDocumentNumber.certificate()`
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withDocumentNumber(documentNumber)
                     .withInteractions(List.of(
@@ -820,6 +853,16 @@ public class ReadmeIntegrationTest {
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
+
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+            signatureValueValidator.validate(
+                    signatureResponse.getSignatureValue(),
+                    signableData.dataToSign(),
+                    signatureResponse.getCertificate(),
+                    signatureFactory);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals(documentNumber, signatureResponse.getDocumentNumber());

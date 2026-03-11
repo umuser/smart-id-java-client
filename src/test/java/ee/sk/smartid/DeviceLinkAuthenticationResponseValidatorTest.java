@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,9 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.MaskGenAlgorithm;
+import ee.sk.smartid.signature.TrailerField;
 import ee.sk.smartid.util.InteractionUtil;
 
 class DeviceLinkAuthenticationResponseValidatorTest {
@@ -231,7 +234,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
         signature.setUserChallenge(userChallengeVerifier);
         signature.setValue(toBase64("signatureValue"));
         signature.setFlowType(flowType.getDescription());
-        signature.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        signature.setSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
         signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
 
         var cert = new SessionCertificate();
@@ -254,7 +257,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
                 "DEMO",
                 certificateLevel,
                 SignatureProtocol.ACSP_V2,
-                new AcspV2SignatureProtocolParameters("rpChallenge", SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
+                new AcspV2SignatureProtocolParameters("rpChallenge", AuthenticationSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
                 InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Log in?", null))),
                 null,
                 null,
