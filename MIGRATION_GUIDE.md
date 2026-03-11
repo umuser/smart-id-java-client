@@ -21,7 +21,7 @@ Changes needed in signing flows:
   - when using only signature algorithm RSASSA_PSS then use `new RsaSsaPssSignatureFactory(RsaSsaPssParameters)`
   - when using only legacy signature algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) then use `new RsaSsaPkcs1SignatureFactory(SigningSignatureAlgorithm)`
   - when both RSASSA_PSS and legacy RSA algorithms are used then possible solution is:
-    ```
+    ```java
     SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
             ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
             : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
@@ -39,88 +39,7 @@ The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature
 - `SigningSignatureAlgorithm`
 - `TrailerField`
 
-When in signing using legacy RSA and DigiDoc4J then conversion from `ee.sk.smartid.signature.SigningSignatureAlgorithm` to DigiDoc4J `org.digidoc4j.DigestAlgorithm` is:
-```
-return switch (signatureAlgorithm) {
-    case SHA256_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA256;
-    case SHA384_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA384;
-    case SHA512_WITH_RSA_ENCRYPTION -> DigestAlgorithm.SHA512;
-}
-```
-
-## device-link based signing example with legacy RSA algorithm and DigiDoc4J container
-
-Full device-link process without DigiDoc container is described in README.md
-
-Here we describe:
-- first step in the process: how to get `SignableData` object when `DigiDoc4J` container is used
-- last step in the process: how to add signature to `DigiDoc4J` container and how to validate signature
-
-### Getting SignableData
-
-Prerequisite: `SmartIdClient smartIdClient` configured and available to use.
-
-```
-    var signatureCertificateLevel = CertificateLevel.QUALIFIED;
-    var documentNumber = "PNOEE-40504040001-DEM0-Q";
-    var dataBytes = "Signable data".getBytes();
-    var dataFileName = "test.txt";
-    var dataFileMimeType = "text/plain";
-    var signatureAlgorithm = SigningSignatureAlgorithm.SHA512_WITH_RSA_ENCRYPTION;
-    org.digidoc4j.DigestAlgorithm digestAlgorithm = DigestAlgorithm.SHA512;
-
-    var certificateByDocumentNumberResult = smartIdClient
-            .createCertificateByDocumentNumber()
-            .withDocumentNumber(documentNumber)
-            .withCertificateLevel(signatureCertificateLevel)
-            .getCertificateByDocumentNumber();
-    var certificate = certificateByDocumentNumberResult.certificate();
-
-    org.digidoc4j.Configuration configuration = new Configuration(Configuration.Mode.PROD);
-    org.digidoc4j.DataFile dataFile = new DataFile(dataBytes, dataFileName, dataFileMimeType);
-    org.digidoc4j.Container container = ContainerBuilder.aContainer()
-            .withConfiguration(configuration)
-            .withDataFile(dataFile)
-            .build();
-    org.digidoc4j.DataToSign dataToSign = SignatureBuilder.aSignature(container)
-            .withSigningCertificate(certificate)
-            .withSignatureDigestAlgorithm(digestAlgorithm)
-            .withSignatureProfile(SignatureProfile.LT)
-            .buildDataToSign();
-    byte[] dataToSignBytes = dataToSign.getDataToSign();
-    SignableData signableData = new SignableData(dataToSignBytes, signatureAlgorithm.getHashAlgorithmForLegacy());
-```
-
-### Validating signature
-
-Prerequisite:
-- `container` and `dataToSign` are the same as in previous code fragment
-- `SignatureResponse signatureResponse` is read from RP API with successful response
-
-```
-    byte[] signatureValue = signatureResponse.getSignatureValue();
-
-    SignatureValueValidator validator = new SignatureValueValidatorImpl();
-    SigningSignatureAlgorithm signatureAlgorithm = signatureResponse.getSignatureAlgorithm();
-    SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
-            ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
-            : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
-    validator.validate(
-            signatureValue,
-            dataToSign.getDataToSign(),
-            signatureResponse.getCertificate(),
-            signatureFactory);
-
-    org.digidoc4j.Signature digiDoc4jSignature = dataToSign.finalize(signatureValue);
-    container.addSignature(digiDoc4jSignature);
-
-    org.digidoc4j.ValidationResult validationResult = digiDoc4jSignature.validateSignature();
-
-    // possible data to use and DigiDoc4J container to save
-    boolean signatureValid = validationResult.isValid();
-    Date timeStampCreationTime = digiDoc4jSignature.getTimeStampCreationTime();
-    container.saveAsFile("targetPath");
-```
+For legacy RSA with DigiDoc4j there is new chapter in README.md: [Legacy algorithms for signing with DigiDoc4j](./README.md#legacy-algorithms-for-signing-with-digidoc4j)
 
 # Migrating from Smart-ID v2 to Smart-ID v3 API
 
