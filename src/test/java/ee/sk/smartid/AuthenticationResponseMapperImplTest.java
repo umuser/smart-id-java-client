@@ -30,19 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.qos.logback.classic.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
-import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -54,12 +51,17 @@ import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.log.Logs;
+import ee.sk.smartid.util.log.LogsSpy;
+import ee.sk.smartid.util.log.LogsSpyExtension;
 
+@ExtendWith(LogsSpyExtension.class)
 class AuthenticationResponseMapperImplTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
 
-    private static final Logger authenticationResponseMapperImplLogger = (Logger) LoggerFactory.getLogger(AuthenticationResponseMapperImpl.class);
+    @Logs
+    private LogsSpy logs;
 
     private AuthenticationResponseMapper authenticationResponseMapper;
 
@@ -445,11 +447,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has invalid value: " + invalidHashAlgorithm);
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has invalid value: " + invalidHashAlgorithm);
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has unsupported value", exception.getMessage());
             }
@@ -498,11 +498,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' has invalid value: " + maskGenAlgorithm.getAlgorithm());
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' has invalid value: " + maskGenAlgorithm.getAlgorithm());
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' has unsupported value", exception.getMessage());
             }
@@ -565,11 +563,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has invalid value: " + maskGenAlgorithmParameters.getHashAlgorithm());
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has invalid value: " + maskGenAlgorithmParameters.getHashAlgorithm());
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has unsupported value", exception.getMessage());
             }
@@ -591,11 +587,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' and 'signature.signatureAlgorithmParameters.hashAlgorithm' do not match. Expected: SHA3-512, actual: SHA-512");
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' and 'signature.signatureAlgorithmParameters.hashAlgorithm' do not match. Expected: SHA3-512, actual: SHA-512");
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", exception.getMessage());
             }
@@ -634,11 +628,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value. Expected: 64, actual: 20");
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value. Expected: 64, actual: 20");
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value", exception.getMessage());
             }
@@ -680,11 +672,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
-                ListAppender<ILoggingEvent> listAppender = getAuthenticationResponseMapperImplLoggerListAppender();
-
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
 
-                assertSingleLogAndDetachLoggerAppender(listAppender, "Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has invalid value: invalid");
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has invalid value: invalid");
 
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has unsupported value", exception.getMessage());
             }
@@ -870,18 +860,5 @@ class AuthenticationResponseMapperImplTest {
         sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
         sessionStatus.setDeviceIpAddress("0.0.0.0");
         return sessionStatus;
-    }
-
-    private static ListAppender<ILoggingEvent> getAuthenticationResponseMapperImplLoggerListAppender() {
-        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-        listAppender.start();
-        authenticationResponseMapperImplLogger.addAppender(listAppender);
-        return listAppender;
-    }
-
-    private void assertSingleLogAndDetachLoggerAppender(ListAppender<ILoggingEvent> listAppender, String message) {
-        assertEquals(1, listAppender.list.size());
-        assertEquals(message, listAppender.list.get(0).getFormattedMessage());
-        authenticationResponseMapperImplLogger.detachAppender(listAppender);
     }
 }
