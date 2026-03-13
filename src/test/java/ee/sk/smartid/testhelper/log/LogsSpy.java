@@ -1,4 +1,4 @@
-package ee.sk.smartid.util.log;
+package ee.sk.smartid.testhelper.log;
 
 /*-
  * #%L

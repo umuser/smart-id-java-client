@@ -51,9 +51,9 @@ import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.util.log.Logs;
-import ee.sk.smartid.util.log.LogsSpy;
-import ee.sk.smartid.util.log.LogsSpyExtension;
+import ee.sk.smartid.testhelper.log.Logs;
+import ee.sk.smartid.testhelper.log.LogsSpy;
+import ee.sk.smartid.testhelper.log.LogsSpyExtension;
 
 @ExtendWith(LogsSpyExtension.class)
 class AuthenticationResponseMapperImplTest {
