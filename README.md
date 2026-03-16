@@ -803,7 +803,7 @@ NB! Integrators must validate signature value against expected signature value.
 
 CertificateValidator will check if the certificate is not expired and is trusted
 by constructing certificate chain with trust anchors and intermediate CA certificates provided in the TrustedCACertStore.
-Will be used by DeviceLinkAuthenticationResponseValidator, NotificationAuthenticationResponseValidator and SignatureResponseValidator.
+Will be used by DeviceLinkAuthenticationResponseValidator, NotificationAuthenticationResponseValidator, CertificateChoiceResponseValidator and SignatureResponseValidator.
 
 ```java
 // Set up TrustedCACertStore
