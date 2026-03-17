@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,6 +70,7 @@ import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
 
 class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
@@ -145,8 +146,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @EnumSource
-        void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+        @EnumSource(value = AuthenticationSignatureAlgorithm.class, names = {"RSASSA_PSS"})
+        void initAuthenticationSession_signatureAlgorithm_ok(AuthenticationSignatureAlgorithm signatureAlgorithm) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(toDeviceLinkAuthenticationResponse());
 

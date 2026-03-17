@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
@@ -26,18 +26,25 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.security.Signature;
 
 /**
- * Parameters for protocol RAW_DIGEST_SIGNATURE
- *
- * @param digest                       Required. The digest to be signed, Base64 encoded.
- * @param signatureAlgorithm           Required. The signature algorithm (e.g. rsassa-pss, sha512WithRSAEncryption).
- * @param signatureAlgorithmParameters Required for RSASSA-PSS. Omitted for RSASSA-PKCS#1 v1.5 algorithms.
+ * Factory for creating preconfigured {@link Signature} instances used when
+ * validating Smart-ID signatures.
+ * <p>
+ * Implementations encapsulate the details of the concrete signature algorithm
+ * (for example RSASSA-PSS or legacy RSASSA-PKCS#1 v1.5) so that callers can
+ * obtain a correctly initialised {@link Signature} object without dealing with
+ * low-level JCA configuration.
  */
-public record RawDigestSignatureProtocolParameters(String digest,
-                                                   String signatureAlgorithm,
-                                                   @JsonInclude(JsonInclude.Include.NON_NULL) SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
+public interface SignatureFactory {
+
+    /**
+     * Creates a new {@link Signature} instance configured for the underlying
+     * Smart-ID signature algorithm.
+     *
+     * @return a configured {@link Signature} implementation ready for public key
+     *         initialization
+     */
+    Signature getSignature();
 }

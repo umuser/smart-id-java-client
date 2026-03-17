@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,10 @@ import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.DigestInput;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
@@ -54,7 +58,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
     private String relyingPartyName;
     private String documentNumber;
     private DigestInput digestInput;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private String linkedSessionID;
     private List<DeviceLinkInteraction> interactions;
     private CertificateLevel certificateLevel;
@@ -151,7 +155,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
      * @param signatureAlgorithm The signature algorithm
      * @return this builder
      */
-    public LinkedNotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public LinkedNotificationSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -257,9 +261,12 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
     }
 
     private LinkedSignatureSessionRequest createSessionRequest() {
+        SignatureAlgorithmParameters algorithmParams = signatureAlgorithm.isLegacyRsa()
+                ? null
+                : new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName());
         var rawDigestParams = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+                algorithmParams);
         return new LinkedSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

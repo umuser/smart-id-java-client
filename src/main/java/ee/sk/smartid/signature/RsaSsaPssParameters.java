@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +26,14 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.HashAlgorithm;
+
 /**
  * Encapsulates multiple parameters of RSASSA-PSS
  */
 public class RsaSsaPssParameters {
 
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private final String signatureAlgorithmName = "rsassa-pss";
 
     private HashAlgorithm digestHashAlgorithm;
     private MaskGenAlgorithm maskGenAlgorithm;
@@ -85,12 +87,12 @@ public class RsaSsaPssParameters {
     }
 
     /**
-     * Gets the signature algorithm
+     * Gets the signature algorithm name
      *
-     * @return the signature algorithm; see {@link SignatureAlgorithm}
+     * @return the signature algorithm name
      */
-    public SignatureAlgorithm getSignatureAlgorithm() {
-        return signatureAlgorithm;
+    public String getSignatureAlgorithmName() {
+        return signatureAlgorithmName;
     }
 
     /**

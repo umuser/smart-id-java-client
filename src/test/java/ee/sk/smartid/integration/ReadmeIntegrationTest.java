@@ -4,7 +4,7 @@ package ee.sk.smartid.integration;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -40,16 +43,18 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
@@ -71,14 +76,11 @@ import ee.sk.smartid.QrCodeGenerator;
 import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
-import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureCertificatePurposeValidator;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactory;
 import ee.sk.smartid.SignatureCertificatePurposeValidatorFactoryImpl;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseValidator;
-import ee.sk.smartid.SignatureValueValidator;
-import ee.sk.smartid.SignatureValueValidatorImpl;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
@@ -97,10 +99,21 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.RsaSsaPkcs1SignatureFactory;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignatureFactory;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
+import ee.sk.smartid.signature.SignatureValueValidator;
+import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.CallbackUrlUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SmartIdDemoIntegrationTest
 public class ReadmeIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReadmeIntegrationTest.class);
 
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]{4}$");
 
@@ -117,15 +130,16 @@ public class ReadmeIntegrationTest {
         smartIdClient.setTrustStore(keyStore);
     }
 
-    @Disabled("Testing with device-link demo accounts is not possible at the moment")
     @Nested
     class DeviceLinkBasedExamples {
 
         @Nested
         class Authentication {
 
-            @Test
-            void anonymousAuthentication_withApp2App() {
+            @Disabled("Testing with App2App and Web2App is not possible at the moment")
+            @ParameterizedTest
+            @EnumSource(value = DeviceLinkType.class, names = {"APP_2_APP", "WEB_2_APP"})
+            void anonymousAuthentication_with_App2App_or_Web2App(DeviceLinkType deviceLinkType) throws IOException, InterruptedException {
                 // For security reasons a new hash value must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
                 // Store generated rpChallenge only on backend side. Do not expose it to the client side.
@@ -161,15 +175,12 @@ public class ReadmeIntegrationTest {
                 // Will be used to calculate elapsed time being used in device link and in authCode
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
-                // Next steps:
-                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-                // - Start querying sessions status
-
                 // Build the  device link URI (without the authCode parameter)
-                // This base URI will be used for QR code or App2App flows
+                // This base URI will be used for App2App or Web2App flows
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
-                        .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                        .withDeviceLinkType(deviceLinkType)
                         .withSessionType(SessionType.AUTHENTICATION)
                         .withSessionToken(sessionToken)
                         .withDigest(rpChallenge)
@@ -177,6 +188,18 @@ public class ReadmeIntegrationTest {
                         .withInitialCallbackUrl(callbackUrl.initialCallbackUri().toString())
                         .withInteractions(authenticationSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
+
+                // In real application user is routed to Smart-ID app and enters PIN 1 there
+                // In this test submit device link to the Mock Service so it simulates the user completing the flow (see device_link_test_endpoint in Smart-ID documentation)
+                submitDeviceLinkToMockService(
+                        new DeviceLinkMockRequest(
+                            "PNOEE-40404040009-MOCK-Q",
+                            deviceLink.toString(),
+                            deviceLinkType.getValue(),
+                            "a=b;c=d",
+                            callbackUrl.initialCallbackUri().toString()
+                        )
+                );
 
                 // Use the sessionId from the authentication session response to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -206,20 +229,20 @@ public class ReadmeIntegrationTest {
                         queryParameters.get("userChallengeVerifier"),
                         "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-                assertEquals("LT", authenticationIdentity.getCountry());
+                assertEquals("TEST", authenticationIdentity.getSurname());
+                assertEquals("EE", authenticationIdentity.getCountry());
             }
 
             @Test
-            void authentication_withSemanticIdentifierAndQrCode() {
+            void authentication_withSemanticIdentifierAndQrCode() throws IOException, InterruptedException {
                 var semanticsIdentifier = new SemanticsIdentifier(
                         // 3 character identity type
                         // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
                         SemanticsIdentifier.IdentityType.PNO,
                         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                        "40504040001"); // identifier (according to country and identity type reference)
+                        "40404040009"); // identifier (according to country and identity type reference)
 
                 // For security reasons a new rpChallenge must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
@@ -250,15 +273,12 @@ public class ReadmeIntegrationTest {
                 // Will be used to calculate elapsed time being used in device link
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
-                // Next steps:
-                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-                // - Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
                 // Build the  device link URI (without the authCode parameter)
                 // This base URI will be used for QR code or App2App flows
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.AUTHENTICATION)
@@ -268,16 +288,25 @@ public class ReadmeIntegrationTest {
                         .withInteractions(authenticationSessionRequest.interactions())
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
-                // Return URI to be used with QR-code generation library on the frontend side
+
+                // In real application return URI to be used with QR-code generation library on the frontend side
                 // or create QR-code data-URI from device link and return that to the client side
                 String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        "PNOEE-40404040009-MOCK-Q",
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Use sessionId to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
                 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
 
                 // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-                assertEquals("COMPLETED", sessionStatus.getState());
+                assertEquals("COMPLETE", sessionStatus.getState());
 
                 // Validate the response and return user's identity
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
@@ -285,15 +314,15 @@ public class ReadmeIntegrationTest {
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("TEST", authenticationIdentity.getSurname());
                 assertEquals("EE", authenticationIdentity.getCountry());
             }
 
             @Test
-            void authentication_withDocumentNumberAndQrCode() {
-                String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            void authentication_withDocumentNumberAndQrCode() throws IOException, InterruptedException {
+                String documentNumber = "PNOEE-40404040009-MOCK-Q";
 
                 // For security reasons a new rpChallenge must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
@@ -325,19 +354,28 @@ public class ReadmeIntegrationTest {
                 // Generate the base (unprotected) device link URI, which does not yet include the authCode
                 long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.AUTHENTICATION)
                         .withSessionToken(sessionToken)
                         .withDigest(rpChallenge)
-                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withInteractions(authenticationSessionRequest.interactions())
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
-                // Return URI to be used with QR-code generation library on the frontend side
+
+                // In real application return URI to be used with QR-code generation library on the frontend side
                 // or create QR-code data-URI from device link and return that to the client side
                 String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        documentNumber,
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Use sessionId to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -352,9 +390,9 @@ public class ReadmeIntegrationTest {
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("TEST", authenticationIdentity.getSurname());
                 assertEquals("EE", authenticationIdentity.getCountry());
             }
         }
@@ -362,9 +400,10 @@ public class ReadmeIntegrationTest {
         @Nested
         class Signature {
 
-            @Test
-            void signature_withDocumentNumberAndQRCode() {
-                String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            @ParameterizedTest
+            @EnumSource(SigningSignatureAlgorithm.class)
+            void signature_withDocumentNumberAndQRCode(SigningSignatureAlgorithm signatureAlgorithm) throws IOException, InterruptedException {
+                String documentNumber = "PNOEE-40404040009-MOCK-Q";
 
                 CertificateByDocumentNumberResult certResponse = smartIdClient
                         .createCertificateByDocumentNumber()
@@ -375,7 +414,8 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data from DataToSign
-                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
+                HashAlgorithm hashAlgorithm = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+                var signableData = new SignableData("dataToSign".getBytes(), hashAlgorithm);
 
                 // Build the device link signature request
                 List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
@@ -383,7 +423,8 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QSCD)
                         .withSignableData(signableData)
                         .withDocumentNumber(documentNumber)
-                        .withInteractions(signatureInteractions);
+                        .withInteractions(signatureInteractions)
+                        .withSignatureAlgorithm(signatureAlgorithm);
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
                 DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
@@ -396,9 +437,6 @@ public class ReadmeIntegrationTest {
                 Instant receivedAt = signatureSessionResponse.receivedAt();
                 URI deviceLinkBase = signatureSessionResponse.deviceLinkBase();
 
-                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-                // Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
                 // Generate auth code
@@ -408,21 +446,29 @@ public class ReadmeIntegrationTest {
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.SIGNATURE)
                         .withSessionToken(sessionToken)
-                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
                         .withInteractions(deviceLinkSignatureSessionRequest.interactions())
+                        .withDigest(deviceLinkSignatureSessionRequest.signatureProtocolParameters().digest())
                         .buildDeviceLink(sessionSecret);
 
-                // Return URI to be used with QR-code generation library on the frontend side
+                // In real application return URI to be used with QR-code generation library on the frontend side
                 // or create QR-code data-URI from device link and return that to the client side
                 String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        documentNumber,
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Get the session status poller
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
                 // Get signatureSessionId from current session response and poll for session status
                 SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-                // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+                // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
                 assertEquals("COMPLETE", signatureSessionStatus.getState());
 
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
@@ -432,24 +478,32 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
-                signatureValueValidator.validate(signatureResponse.getSignatureValue(), signableData.calculateHash(), certResponse.certificate(), signatureResponse.getRsaSsaPssParameters());
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
+                        certResponse.certificate(),
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
-                assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+                assertEquals(documentNumber, signatureResponse.getDocumentNumber());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
 
-            @Test
-            void signature_withSemanticIdentifier() {
+            @ParameterizedTest
+            @EnumSource(SigningSignatureAlgorithm.class)
+            void signature_withSemanticIdentifier(SigningSignatureAlgorithm signatureAlgorithm) throws IOException, InterruptedException {
                 var semanticIdentifier = new SemanticsIdentifier(
                         // 3 character identity type
                         // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
                         SemanticsIdentifier.IdentityType.PNO,
                         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                        "40504040001"); // identifier (according to country and identity type reference)
+                        "40404040009"); // identifier (according to country and identity type reference)
 
                 NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
                         .createNotificationCertificateChoice()
@@ -464,7 +518,7 @@ public class ReadmeIntegrationTest {
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
                 // Querying the sessions status
-                SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+                SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
                 CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
@@ -474,22 +528,17 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data
-                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
-
-                var semanticsIdentifier = new SemanticsIdentifier(
-                        // 3 character identity type
-                        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
-                        SemanticsIdentifier.IdentityType.PNO,
-                        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                        "40504040001"); // identifier (according to country and identity type reference)
+                HashAlgorithm hashAlgorithm = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA3_512;
+                var signableData = new SignableData("dataToSign".getBytes(), hashAlgorithm);
 
                 // Build the device link signature request
                 List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
                 DeviceLinkSignatureSessionRequestBuilder deviceLinkSignatureSessionRequestBuilder = smartIdClient.createDeviceLinkSignature()
                         .withCertificateLevel(CertificateLevel.QUALIFIED)
                         .withSignableData(signableData)
-                        .withSemanticsIdentifier(semanticsIdentifier)
-                        .withInteractions(signatureInteractions);
+                        .withSemanticsIdentifier(semanticIdentifier)
+                        .withInteractions(signatureInteractions)
+                        .withSignatureAlgorithm(signatureAlgorithm);
 
                 // Init signature session
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
@@ -504,29 +553,38 @@ public class ReadmeIntegrationTest {
                 String sessionSecret = signatureSessionResponse.sessionSecret();
                 Instant receivedAt = signatureSessionResponse.receivedAt();
 
-                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-                // Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
                 // Generate auth code
                 URI deviceLink = smartIdClient.createDynamicContent()
-                        .withDeviceLinkBase("smartid://")
+                        .withSchemeName("smart-id-demo")
+                        .withDeviceLinkBase(signatureSessionResponse.deviceLinkBase().toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.SIGNATURE)
                         .withSessionToken(sessionToken)
-                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
                         .withInteractions(deviceLinkSignatureSessionRequest.interactions()) // interactions string must be the same as in the signature session request
+                        .withDigest(deviceLinkSignatureSessionRequest.signatureProtocolParameters().digest())
                         .buildDeviceLink(sessionSecret);
-                // Display QR-code to the user
+
+                // In real application return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        certificateChoiceResponse.getDocumentNumber(),
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Get the session status poller
                 poller = smartIdClient.getSessionStatusPoller();
                 // Get signatureSessionId from current session response and poll for session status
                 SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-                // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+                // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
                 assertEquals("COMPLETE", signatureSessionStatus.getState());
 
                 // Validate signature response
@@ -534,13 +592,17 @@ public class ReadmeIntegrationTest {
                 SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
                 SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
-                signatureValueValidator.validate(signatureResponse.getSignatureValue(),
-                        signableData.calculateHash(),
+                SignatureFactory signatureFactory = signatureResponse.getSignatureAlgorithm().isLegacyRsa()
+                        ? new RsaSsaPkcs1SignatureFactory(signatureResponse.getSignatureAlgorithm())
+                        : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+                signatureValueValidator.validate(
+                        signatureResponse.getSignatureValue(),
+                        signableData.dataToSign(),
                         certificateChoiceResponse.getCertificate(),
-                        signatureResponse.getRsaSsaPssParameters());
+                        signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
-                assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+                assertEquals(certificateChoiceResponse.getDocumentNumber(), signatureResponse.getDocumentNumber());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
@@ -693,8 +755,9 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
 
-        @Test
-        void signature_withSemanticsIdentifier() {
+        @ParameterizedTest
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withSemanticsIdentifier(SigningSignatureAlgorithm signatureAlgorithm) {
             var semanticIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
                     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -716,7 +779,7 @@ public class ReadmeIntegrationTest {
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
             // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+            SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
@@ -724,8 +787,9 @@ public class ReadmeIntegrationTest {
             CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus, certificateLevel);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             // Create the Semantics Identifier
             var semanticsIdentifier = new SemanticsIdentifier(
@@ -736,6 +800,7 @@ public class ReadmeIntegrationTest {
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withInteractions(List.of(
@@ -752,23 +817,34 @@ public class ReadmeIntegrationTest {
 
             // Get sessionID from current session response and poll for session status
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(sessionID);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+            signatureValueValidator.validate(
+                    signatureResponse.getSignatureValue(),
+                    signableData.dataToSign(),
+                    signatureResponse.getCertificate(),
+                    signatureFactory);
+
             assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOEE-40504040001-DEMO-Q", signatureResponse.getDocumentNumber());
+            assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
             assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
             assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
         }
 
-        @Test
-        void signature_withDocumentNumber() {
-            String documentNumber = "PNOEE-40504040001-DEMO-Q";
+        @ParameterizedTest
+        @EnumSource(SigningSignatureAlgorithm.class)
+        void signature_withDocumentNumber(SigningSignatureAlgorithm signatureAlgorithm) {
+            String documentNumber = "PNOEE-50001029996-DEMO-Q";
 
             CertificateLevel certificateLevel = CertificateLevel.QSCD;
             // Query the certificate by document number to be used for creating the DataToSign
@@ -791,11 +867,13 @@ public class ReadmeIntegrationTest {
 
             // For example use digidoc4j with SignatureBuilder to create DataToSign using `certificateByDocumentNumber.certificate()`
 
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+            // Create the signable data so calculateHash() uses the correct hash for the signature algorithm
+            HashAlgorithm hashForDigest = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+            var signableData = new SignableData("dataToSign".getBytes(), hashForDigest);
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
                     .withCertificateLevel(certificateLevel)
+                    .withSignatureAlgorithm(signatureAlgorithm)
                     .withSignableData(signableData)
                     .withDocumentNumber(documentNumber)
                     .withInteractions(List.of(
@@ -815,11 +893,21 @@ public class ReadmeIntegrationTest {
 
             // Get sessionID from current session response and poll for session status
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
+
+            SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
+            SignatureFactory signatureFactory = signatureAlgorithm.isLegacyRsa()
+                    ? new RsaSsaPkcs1SignatureFactory(signatureAlgorithm)
+                    : new RsaSsaPssSignatureFactory(signatureResponse.getRsaSsaPssParameters());
+            signatureValueValidator.validate(
+                    signatureResponse.getSignatureValue(),
+                    signableData.dataToSign(),
+                    signatureResponse.getCertificate(),
+                    signatureFactory);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals(documentNumber, signatureResponse.getDocumentNumber());
@@ -887,6 +975,7 @@ public class ReadmeIntegrationTest {
             // Build the  device link URI
             // This base URI will be used for QR code or App2App flows
             URI deviceLink = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
                     .withDeviceLinkBase(deviceLinkBase.toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
@@ -904,7 +993,7 @@ public class ReadmeIntegrationTest {
             SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
 
             // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-            assertEquals("COMPLETED", certificateSessionStatus.getState());
+            assertEquals("COMPLETE", certificateSessionStatus.getState());
 
             // Validate the certificate choice response
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(new FileTrustedCAStoreBuilder().build());
@@ -927,13 +1016,47 @@ public class ReadmeIntegrationTest {
 
             // Use sessionId to poll for signature session status updates
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionResponse.sessionID());
-            assertEquals("COMPLETED", signatureSessionStatus.getState());
+            assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             // Validate signature response
             SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
 
             assertNotNull(signatureResponse.getSignatureValue());
+        }
+    }
+
+    private static void submitDeviceLinkToMockService(DeviceLinkMockRequest deviceLinkMockRequest) throws IOException, InterruptedException {
+        var mapper = new ObjectMapper();
+        String body = mapper.writeValueAsString(deviceLinkMockRequest);
+
+        String url = "https://sid.demo.sk.ee/mock/device-link";
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("POST {}", url);
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("Request headers: {}", Collections.singletonMap("Content-Type", "application/json"));
+            logger.trace("Message body: {}", body);
+        }
+
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response status: {}", response.statusCode());
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("Response body: {}", response.body());
+        }
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Mock device-link submission failed: " + response.statusCode() + " " + response.body());
         }
     }
 

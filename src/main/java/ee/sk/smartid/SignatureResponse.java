@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,8 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.signature.RsaSsaPssParameters;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 /**
  * Response of a completed and validated signature session.
@@ -40,7 +42,7 @@ public class SignatureResponse implements Serializable {
     private String endResult;
     private String signatureValueInBase64;
     private String algorithmName;
-    private SignatureAlgorithm signatureAlgorithm;
+    private SigningSignatureAlgorithm signatureAlgorithm;
     private FlowType flowType;
     private X509Certificate certificate;
     private CertificateLevel requestedCertificateLevel;
@@ -124,7 +126,7 @@ public class SignatureResponse implements Serializable {
      *
      * @return the signature algorithm
      */
-    public SignatureAlgorithm getSignatureAlgorithm() {
+    public SigningSignatureAlgorithm getSignatureAlgorithm() {
         return signatureAlgorithm;
     }
 
@@ -133,7 +135,7 @@ public class SignatureResponse implements Serializable {
      *
      * @param signatureAlgorithm the signature algorithm
      */
-    public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public void setSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 

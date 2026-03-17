@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ package ee.sk.smartid;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,6 +66,9 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class DeviceLinkSignatureSessionRequestBuilderTest {
 
@@ -162,7 +166,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @Test
     void initSignatureSession_withSignatureAlgorithm_setsCorrectAlgorithm() {
         when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
-        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS));
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(SigningSignatureAlgorithm.RSASSA_PSS));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
@@ -172,7 +176,22 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void initSignatureSession_withLegacyRsaAlgorithm_omitsSignatureAlgorithmParameters(SigningSignatureAlgorithm signatureAlgorithm) {
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+
+        deviceLinkSessionRequestBuilder.initSignatureSession();
+
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
+        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        assertEquals(signatureAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
     }
 
     @ParameterizedTest
@@ -258,7 +277,28 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource(SigningSignatureAlgorithm.class)
+    void initSignatureSession_withSignatureAlgorithm_ok(SigningSignatureAlgorithm signatureAlgorithm) {
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+
+        toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm))
+                .initSignatureSession();
+
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
+        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(signatureAlgorithm.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        if (signatureAlgorithm.isLegacyRsa()) {
+            assertNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+        } else {
+            assertNotNull(capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters());
+            assertEquals(HashAlgorithm.SHA_512.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
+        }
     }
 
     @Test

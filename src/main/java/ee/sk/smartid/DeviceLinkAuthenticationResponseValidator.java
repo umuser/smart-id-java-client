@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,9 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.RsaSsaPssSignatureFactory;
+import ee.sk.smartid.signature.SignatureValueValidator;
+import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
@@ -159,7 +162,7 @@ public class DeviceLinkAuthenticationResponseValidator {
         signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
                 payload,
                 authenticationResponse.getCertificate(),
-                authenticationResponse.getRsaSsaPssSignatureParameters());
+                new RsaSsaPssSignatureFactory(authenticationResponse.getRsaSsaPssSignatureParameters()));
     }
 
     private byte[] constructPayload(AuthenticationResponse authenticationResponse,

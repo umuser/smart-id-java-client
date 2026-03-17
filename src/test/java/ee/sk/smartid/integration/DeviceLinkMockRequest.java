@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.integration;
 
 /*-
  * #%L
@@ -26,18 +26,20 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * Parameters for protocol RAW_DIGEST_SIGNATURE
+ * Object to send to Smart-ID Mock service to simulate user-action in the Device Link flow.
  *
- * @param digest                       Required. The digest to be signed, Base64 encoded.
- * @param signatureAlgorithm           Required. The signature algorithm (e.g. rsassa-pss, sha512WithRSAEncryption).
- * @param signatureAlgorithmParameters Required for RSASSA-PSS. Omitted for RSASSA-PKCS#1 v1.5 algorithms.
+ * @param documentNumber     Required. The document number of the user.
+ * @param deviceLink         Required. The device link URL generated for device link flow
+ * @param flowType           Required. Supported values QR, Web2App and App2App
+ * @param browserCookie      Required for Web2App and App2App flows. The browser cookie value for the session.
+ * @param initialCallbackUrl Required for Web2App and App2App flows. The initial callback URL to which the user will be redirected.
  */
-public record RawDigestSignatureProtocolParameters(String digest,
-                                                   String signatureAlgorithm,
-                                                   @JsonInclude(JsonInclude.Include.NON_NULL) SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
+public record DeviceLinkMockRequest(String documentNumber,
+                                    String deviceLink,
+                                    String flowType,
+                                    @JsonInclude(JsonInclude.Include.NON_EMPTY) String browserCookie,
+                                    @JsonInclude(JsonInclude.Include.NON_EMPTY) String initialCallbackUrl) {
 }

@@ -3,7 +3,34 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.1-?] - TBD
+## [3.2] - TBD
+
+### Changes
+
+- Added legacy signing algorithms (`SHA256_WITH_RSA_ENCRYPTION`, `SHA384_WITH_RSA_ENCRYPTION`, `SHA512_WITH_RSA_ENCRYPTION`) for RSASSA-PKCS#1 v1.5.
+  - Compatible with DigiDoc4j library which does not support RSASSA-PSS.
+  - Use `SigningSignatureAlgorithm` enum and `withSignatureAlgorithm()` on signature session builders.
+  - Use `SigningSignatureAlgorithm.getHashAlgorithmForLegacy()` when creating `SignableData` for legacy algorithms.
+  - Legacy algorithms do not use `signatureAlgorithmParameters` in requests or responses.
+- Split `SignatureAlgorithm` into `AuthenticationSignatureAlgorithm` (authentication) and `SigningSignatureAlgorithm` (signing).
+  - Only allowed `AuthenticationSignatureAlgorithm` is `RSASSA_PSS`; default `SigningSignatureAlgorithm` is `RSASSA_PSS`.
+- Added `SignatureFactory` interface for creating `java.security.Signature` instance for verifying signature and added its implementations:
+  - `RsaSsaPssSignatureFactory`
+  - `RsaSsaPkcs1SignatureFactory`
+- Changed `SignatureValueValidator.validate` last parameter from `RsaSsaPssParameters` to `SignatureFactory`:
+- The following classes are moved from `ee.sk.smartid` to `ee.sk.smartid.signature`:
+  - `AuthenticationSignatureAlgorithm`
+  - `DigestInput`
+  - `MaskGenAlgorithm`
+  - `RsaSsaPssParameters`
+  - `SignableData`
+  - `SignableHash`
+  - `SignatureValueValidator`
+  - `SignatureValueValidatorImpl`
+  - `SigningSignatureAlgorithm`
+  - `TrailerField`
+
+## [3.1] - 2025-10-15
 
 ### Structural changes
 

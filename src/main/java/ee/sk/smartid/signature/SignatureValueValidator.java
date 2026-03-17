@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,20 +32,25 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 /**
  * Interface for signature value validator.
+ * <p>
+ * Use a concrete {@link SignatureFactory} implementation to specify the signature algorithm and parameters:
+ * {@link RsaSsaPssSignatureFactory} for RSASSA-PSS (authentication and signing), or
+ * {@link RsaSsaPkcs1SignatureFactory} for legacy RSASSA-PKCS#1 v1.5 algorithms (signing only).
+ * The factory encapsulates algorithm choice and parameter validation.
  */
 public interface SignatureValueValidator {
 
     /**
-     * Validates the signature value against the calculated signature value.
+     * Validates the signature value using the provided signature factory.
      *
-     * @param signatureValue      the signature value to validate
-     * @param payload             the original data that was signed
-     * @param certificate         X509 certificate used for signature validation
-     * @param rsaSsaPssParameters signature parameters used for creating signature value
-     * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
+     * @param signatureValue   the signature value to validate
+     * @param payload          the original data that was signed (typically the hash that was sent to Smart-ID)
+     * @param certificate      X.509 certificate used for signature validation
+     * @param signatureFactory factory that creates the {@link java.security.Signature} instance for verification
+     * @throws UnprocessableSmartIdResponseException when there is any issue with validating the signature value
      */
     void validate(byte[] signatureValue,
                   byte[] payload,
                   X509Certificate certificate,
-                  RsaSsaPssParameters rsaSsaPssParameters);
+                  SignatureFactory signatureFactory);
 }

@@ -39,6 +39,10 @@ import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
+import ee.sk.smartid.signature.MaskGenAlgorithm;
+import ee.sk.smartid.signature.RsaSsaPssParameters;
+import ee.sk.smartid.signature.TrailerField;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -177,7 +181,7 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
         if (StringUtil.isEmpty(sessionSignature.getSignatureAlgorithm())) {
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithm' is empty");
         }
-        if (!SignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
+        if (!AuthenticationSignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
             logger.error("Authentication session status field 'signature.signatureAlgorithm' has invalid value: {}", sessionSignature.getSignatureAlgorithm());
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithm' has unsupported value");
         }

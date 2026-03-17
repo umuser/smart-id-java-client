@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,7 @@ import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.signature.AuthenticationSignatureAlgorithm;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
@@ -59,7 +60,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String rpChallenge;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private AuthenticationSignatureAlgorithm signatureAlgorithm = AuthenticationSignatureAlgorithm.RSASSA_PSS;
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
@@ -136,7 +137,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(AuthenticationSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }

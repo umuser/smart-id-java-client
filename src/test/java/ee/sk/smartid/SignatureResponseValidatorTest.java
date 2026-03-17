@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,6 +51,7 @@ import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 
 class SignatureResponseValidatorTest {
 
@@ -107,6 +109,21 @@ class SignatureResponseValidatorTest {
 
         SignatureResponse response = signatureResponseValidator.validate(sessionStatus, CertificateLevel.ADVANCED);
         assertEquals("OK", response.getEndResult());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SigningSignatureAlgorithm.class, names = {"SHA256_WITH_RSA_ENCRYPTION", "SHA384_WITH_RSA_ENCRYPTION", "SHA512_WITH_RSA_ENCRYPTION"})
+    void validate_legacyRsaSignature_ok_withoutSignatureAlgorithmParameters(SigningSignatureAlgorithm signatureAlgorithm) {
+        SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", signatureAlgorithm.getAlgorithmName());
+        sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
+        sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
+
+        SignatureResponse response = signatureResponseValidator.validate(sessionStatus, CertificateLevel.QUALIFIED);
+
+        assertEquals("OK", response.getEndResult());
+        assertEquals(signatureAlgorithm.getAlgorithmName(), response.getAlgorithmName());
+        assertEquals(signatureAlgorithm, response.getSignatureAlgorithm());
+        assertNull(response.getRsaSsaPssParameters());
     }
 
     @Test
@@ -542,7 +559,7 @@ class SignatureResponseValidatorTest {
         sessionCertificate.setValue(CertificateUtil.getEncodedCertificateData(NQ_SIGNING_CERTIFICATE));
 
         var params = toSessionSignatureAlgorithmParams();
-        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params, FlowType.QR);
+        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SigningSignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params, FlowType.QR);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");

@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,10 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.signature.DigestInput;
+import ee.sk.smartid.signature.SignableData;
+import ee.sk.smartid.signature.SignableHash;
+import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
@@ -63,7 +67,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private SigningSignatureAlgorithm signatureAlgorithm = SigningSignatureAlgorithm.RSASSA_PSS;
     private String initialCallbackUrl;
     private DigestInput digestInput;
 
@@ -183,7 +187,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SigningSignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -287,9 +291,12 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private DeviceLinkSignatureSessionRequest createSignatureSessionRequest() {
+        SignatureAlgorithmParameters algorithmParams = signatureAlgorithm.isLegacyRsa()
+                ? null
+                : new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName());
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+                algorithmParams);
         return new DeviceLinkSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

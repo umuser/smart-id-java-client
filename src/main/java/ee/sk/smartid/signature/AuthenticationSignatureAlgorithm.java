@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.signature;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,19 +29,20 @@ package ee.sk.smartid;
 import java.util.Arrays;
 
 /**
- * Signature algorithms supported by Smart-ID API.
+ * Signature algorithms supported for authentication sessions.
+ * <p>
+ * Currently only RSASSA-PSS is allowed by the Smart-ID API.
  */
-public enum SignatureAlgorithm {
+public enum AuthenticationSignatureAlgorithm {
 
     /**
      * RSASSA-PSS (RSA Probabilistic Signature Scheme) as defined in PKCS #1 v2.1.
-     * This algorithm provides probabilistic signature generation for enhanced security.
      */
     RSASSA_PSS("rsassa-pss");
 
     private final String algorithmName;
 
-    SignatureAlgorithm(String algorithmName) {
+    AuthenticationSignatureAlgorithm(String algorithmName) {
         this.algorithmName = algorithmName;
     }
 
@@ -55,13 +56,13 @@ public enum SignatureAlgorithm {
     }
 
     /**
-     * Checks if the provided signature algorithm is supported.
+     * Checks if the provided signature algorithm is supported for authentication.
      *
      * @param signatureAlgorithm the signature algorithm name to check
      * @return true if the signature algorithm is supported, false otherwise
      */
     public static boolean isSupported(String signatureAlgorithm) {
-        return Arrays.stream(SignatureAlgorithm.values())
+        return Arrays.stream(AuthenticationSignatureAlgorithm.values())
                 .anyMatch(s -> s.getAlgorithmName().equals(signatureAlgorithm));
     }
 
@@ -69,14 +70,15 @@ public enum SignatureAlgorithm {
      * Converts a string representation of a signature algorithm to its corresponding enum value.
      *
      * @param signatureAlgorithm the signature algorithm name
-     * @return the corresponding SignatureAlgorithm enum value
+     * @return the corresponding AuthenticationSignatureAlgorithm enum value
      * @throws IllegalArgumentException if the provided signature algorithm is not supported
      */
-    public static SignatureAlgorithm fromString(String signatureAlgorithm) {
+    public static AuthenticationSignatureAlgorithm fromString(String signatureAlgorithm) {
         return Arrays
-                .stream(SignatureAlgorithm.values())
+                .stream(AuthenticationSignatureAlgorithm.values())
                 .filter(s -> s.getAlgorithmName().equals(signatureAlgorithm))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid signatureAlgorithm value: " + signatureAlgorithm));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid authentication signatureAlgorithm value: " + signatureAlgorithm));
     }
 }
+
