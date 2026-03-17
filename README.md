@@ -231,8 +231,8 @@ Anonymous authentication is a new feature in Smart-ID API v3.1. It allows to aut
 RP can learn the user's identity only after the user has authenticated themselves.
 
 ```java
-// For security reasons a new hash value must be created for each new authentication request
-String rpChallenge = RpChallengeGenerator.generate();
+// For security reasons a new RP challenge must be created for each new authentication request
+RpChallenge rpChallenge = RpChallengeGenerator.generate();
 // Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
@@ -240,7 +240,7 @@ String rpChallenge = RpChallengeGenerator.generate();
 DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         // to use anonymous authentication, do not set semantics identifier or document number
-        .withRpChallenge(rpChallenge)
+        .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withSignatureAlgorithm(AuthenticationSignatureAlgorithm.RSASSA_PSS)
         .withHashAlgorithm(HashAlgorithm.SHA3_512)
         .withInteractions(Collections.singletonList(
@@ -805,7 +805,8 @@ if ("RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
 ### Validating session status response
 
 It's important to validate the session status response to ensure that the returned signature or authentication result is valid.
-For validating authentication session status response, use the `AuthenticationResponseValidator`.
+For validating authentication session status response, use `DeviceLinkAuthenticationResponseValidator` for device link flows
+and `NotificationAuthenticationResponseValidator` for notification-based flows.
 For validating signature session status response, use the `SignatureResponseValidator`.
 NB! Integrators must validate signature value against expected signature value.
 
@@ -813,7 +814,7 @@ NB! Integrators must validate signature value against expected signature value.
 
 CertificateValidator will check if the certificate is not expired and is trusted
 by constructing certificate chain with trust anchors and intermediate CA certificates provided in the TrustedCACertStore.
-Will be used by AuthenticationResponseValidator and SignatureResponseValidator.
+Will be used by DeviceLinkAuthenticationResponseValidator, NotificationAuthenticationResponseValidator, CertificateChoiceResponseValidator and SignatureResponseValidator.
 
 ```java
 // Set up TrustedCACertStore
@@ -848,11 +849,12 @@ CertificateValidator certificateValidator = new CertificateValidatorImpl(trusted
 DeviceLinkAuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator) 
 
 ```java
-// Set up AuthenticationResponseValidator with the CertificateValidator
-DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+// Set up DeviceLinkAuthenticationResponseValidator with the CertificateValidator
+DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator =
+        DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
 
 // Create authentication request builder
-DeviceLinkAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
+DeviceLinkAuthenticationSessionRequestBuilder authenticationRequestBuilder = smartIdClient.createDeviceLinkAuthentication()...;
 // Initialize session
 DeviceLinkSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
 // Get request used for starting the authentication session and use it later to validate sessions status response
@@ -863,9 +865,13 @@ SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.sessionID());
 
 // validate sessions state is completed
-if("COMPLETE".equals(sessionStatus.getState())){
+if ("COMPLETE".equals(sessionStatus.getState())) {
+    // For same-device flows (Web2App/App2App), get userChallengeVerifier from callback URL
+    String userChallengeVerifier = "<userChallengeVerifier-from-callback-url>";
+
     // validate the session status response with authentication session request and return authentication identity
-    AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+    AuthenticationIdentity authenticationIdentity =
+            deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, userChallengeVerifier, "smart-id-demo");
 }
 ```
 
@@ -874,11 +880,12 @@ if("COMPLETE".equals(sessionStatus.getState())){
 NotificationAuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator)
 
 ```java
-// Set up AuthenticationResponseValidator with the CertificateValidator
-NotificationAuthenticationResponseValidator notificationAuthenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+// Set up NotificationAuthenticationResponseValidator with the CertificateValidator
+NotificationAuthenticationResponseValidator notificationAuthenticationResponseValidator =
+        NotificationAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
 
 // Create authentication request builder
-NotificationAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
+NotificationAuthenticationSessionRequestBuilder authenticationRequestBuilder = smartIdClient.createNotificationAuthentication()...;
 // Initialize session
 NotificationAuthenticationSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
 // Get request used for starting the authentication session and use it later to validate sessions status response
@@ -889,9 +896,10 @@ SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.sessionID());
 
 // validate sessions state is completed
-if("COMPLETE".equals(sessionStatus.getState())){
+if ("COMPLETE".equals(sessionStatus.getState())) {
     // validate the session status response with authentication session request and return authentication identity
-    AuthenticationIdentity authenticationIdentity = notificationAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+    AuthenticationIdentity authenticationIdentity =
+            notificationAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 }
 ```
 

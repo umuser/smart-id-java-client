@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,9 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.qos.logback.classic.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -49,10 +51,17 @@ import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.testhelper.log.Logs;
+import ee.sk.smartid.testhelper.log.LogsSpy;
+import ee.sk.smartid.testhelper.log.LogsSpyExtension;
 
+@ExtendWith(LogsSpyExtension.class)
 class AuthenticationResponseMapperImplTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
+
+    @Logs
+    private LogsSpy logs;
 
     private AuthenticationResponseMapper authenticationResponseMapper;
 
@@ -439,6 +448,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has invalid value: " + invalidHashAlgorithm);
+
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has unsupported value", exception.getMessage());
             }
 
@@ -487,6 +499,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' has invalid value: " + maskGenAlgorithm.getAlgorithm());
+
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' has unsupported value", exception.getMessage());
             }
 
@@ -549,6 +564,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has invalid value: " + maskGenAlgorithmParameters.getHashAlgorithm());
+
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has unsupported value", exception.getMessage());
             }
 
@@ -570,7 +588,10 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
-                assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", exception.getMessage());
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' and 'signature.signatureAlgorithmParameters.hashAlgorithm' do not match. Expected: SHA3-512, actual: SHA-512");
+
+                assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", exception.getMessage());
             }
 
             @Test
@@ -608,6 +629,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value. Expected: 64, actual: 20");
+
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value", exception.getMessage());
             }
 
@@ -649,6 +673,9 @@ class AuthenticationResponseMapperImplTest {
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+
+                logs.shouldHave(Level.ERROR, "Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has invalid value: invalid");
+
                 assertEquals("Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has unsupported value", exception.getMessage());
             }
 

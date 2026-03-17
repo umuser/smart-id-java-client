@@ -224,14 +224,14 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
         }
         Optional<HashAlgorithm> maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm());
         if (maskGenHashAlgorithm.isEmpty()) {
-            logger.error("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' has invalid value: {}", maskGenAlgorithm.getParameters().getHashAlgorithm());
+            logger.error("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has invalid value: {}", maskGenAlgorithm.getParameters().getHashAlgorithm());
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has unsupported value");
         }
         if (hashAlgorithm.get() != maskGenHashAlgorithm.get()) {
-            logger.error("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' and 'signature.signatureAlgorithmParameters.hashAlgorithm' do not match. Expected: {}, actual: {}",
+            logger.error("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' and 'signature.signatureAlgorithmParameters.hashAlgorithm' do not match. Expected: {}, actual: {}",
                     hashAlgorithm.get().getAlgorithmName(),
                     maskGenHashAlgorithm.get().getAlgorithmName());
-            throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value");
+            throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value");
         }
 
         if (signatureAlgorithmParameters.getSaltLength() == null) {
